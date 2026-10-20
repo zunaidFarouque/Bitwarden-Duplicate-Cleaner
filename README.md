@@ -211,6 +211,12 @@ Bitwarden-Duplicate-Cleaner/
 
 ---
 
+## 👤 Author & Credits
+
+Developed and maintained by **Md Zunaid Farouque** ([@zunaidFarouque](https://github.com/zunaidFarouque)).
+
+---
+
 ## 📄 License
 
-Distributed under the [MIT License](LICENSE). Copyright &copy; 2026 Zunaid Farouque.
+Distributed under the [MIT License](LICENSE). Copyright &copy; 2026 Md Zunaid Farouque.
