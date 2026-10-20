@@ -123,10 +123,21 @@ def analyze_vault(
     """
     folder_map = {f.id: f.name for f in folders if f.id and f.name}
 
+    duplicate_domains: Dict[str, DomainGroup] = {}
+    unique_items: List[ItemSummary] = []
+    domain_summaries: List[DomainSummary] = []
+
     # Grouping structure: domain -> normalized_username -> list of items
     grouped: Dict[str, Dict[str, List[BitwardenItem]]] = defaultdict(lambda: defaultdict(list))
 
     for item in items:
+        # Only Login items (type == 1) undergo duplicate account grouping.
+        # Cards (type 3), Secure Notes (type 2), and Identities (type 4) are non-login items
+        # that must never be collapsed or merged into logins. They are placed directly into unique items.
+        if item.type is not None and item.type != 1:
+            unique_items.append(item_to_summary(item, folder_map))
+            continue
+
         # Determine domain (check user manual override first)
         if domain_overrides and item.id in domain_overrides:
             domain = domain_overrides[item.id]
@@ -143,10 +154,6 @@ def analyze_vault(
             norm_user = f"_no_username_{item_name_str}"
 
         grouped[domain][norm_user].append(item)
-
-    duplicate_domains: Dict[str, DomainGroup] = {}
-    unique_items: List[ItemSummary] = []
-    domain_summaries: List[DomainSummary] = []
 
     for domain, accounts_dict in grouped.items():
         duplicate_account_groups: List[AccountGroup] = []

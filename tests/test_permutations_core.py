@@ -927,6 +927,49 @@ class TestDiffMatrixAndGroupingPermutations(unittest.TestCase):
         self.assertEqual(diffs, ["name"])
         self.assertEqual(flags[0], {"name": True})
 
+    def test_non_login_items_retention_cards_notes_identities(self):
+        """Verify that Cards, Secure Notes, and Identities are treated as safe unique items and never merged."""
+        card1 = BitwardenItem(
+            id="c1",
+            type=3,  # Card
+            name="Visa Credit Card",
+            notes="Exp 12/28",
+            card={"cardholderName": "John Doe", "number": "4111222233334444"}
+        )
+        card2 = BitwardenItem(
+            id="c2",
+            type=3,  # Another Card with same name
+            name="Visa Credit Card",
+            notes="Exp 06/29",
+            card={"cardholderName": "Jane Doe", "number": "4111555566667777"}
+        )
+        note = BitwardenItem(
+            id="sn1",
+            type=2,  # Secure Note
+            name="Secret Recovery Seed",
+            notes="apple banana cherry dog elephant",
+            secureNote={"type": 0}
+        )
+        identity = BitwardenItem(
+            id="id1",
+            type=4,  # Identity
+            name="Primary Identity",
+            identity={"firstName": "Md Zunaid", "lastName": "Farouque"}
+        )
+        login = BitwardenItem(
+            id="l1",
+            type=1,
+            name="Google",
+            login=LoginInfo(uris=[URI(uri="https://accounts.google.com")], username="user@gmail.com", password="pass")
+        )
+
+        dup_domains, unique_items, _ = analyze_vault([card1, card2, note, identity, login], [])
+        # Dup domains should be completely empty (cards/notes are never duplicate logins)
+        self.assertEqual(len(dup_domains), 0)
+        # All 5 items are in unique items
+        unique_ids = {u.id for u in unique_items}
+        self.assertEqual(unique_ids, {"c1", "c2", "sn1", "id1", "l1"})
+
 
 if __name__ == "__main__":
     unittest.main()
