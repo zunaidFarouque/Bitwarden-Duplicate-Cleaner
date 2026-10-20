@@ -1,175 +1,216 @@
-# Bitwarden Duplicate Cleaner
+# 🛡️ Bitwarden Duplicate Cleaner
 
-> **100% Local, Air-Gapped, Privacy-First Bitwarden Vault Deduplication & Consolidation**  
-> Clean up duplicates, resolve discrepancies, preserve all passkeys (`fido2Credentials`), and consolidate messy vaults with absolute peace of mind.
+<div align="center">
+
+[![Python](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-19-61DAFB.svg?logo=react&logoColor=black)](https://react.dev/)
+[![TailwindCSS](https://img.shields.io/badge/Tailwind-v4-38B2AC.svg?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Tests](https://img.shields.io/badge/Tests-59%20Passed-brightgreen.svg)]()
+[![Air-Gapped](https://img.shields.io/badge/Privacy-100%25%20Air--Gapped-indigo.svg)]()
+
+**A 100% local, privacy-first, passkey-safe web application for deduplicating, diffing, and consolidating Bitwarden password vaults with absolute peace of mind.**
+
+[Quick Start](#-quick-start) • [How to Export Passkeys](#-how-to-export-from-bitwarden-with-passkeys) • [Key Features](#-key-features) • [Workflow](#-interactive-workflow) • [Testing](#-comprehensive-test-suite)
+
+</div>
 
 ---
 
-## 🌟 Key Highlights & Design Philosophy
+## 🌟 Key Features
 
-- **🔒 100% Local & Air-Gapped**: Runs entirely on `127.0.0.1:8765`. Zero network requests, zero telemetry, and zero third-party CDNs. Your passwords and passkeys never leave your local machine.
-- **🔑 Passkey Protection & Validation**: Explicit detection of hardware passkeys (`fido2Credentials`). If you check *"I use passkeys in my vault"* but the file contains none, a prominent warning alerts you before you proceed. During merging, passkeys are unioned so no hardware credentials are ever lost.
-- **🧠 Smart Account-Level Grouping**:
-  - Automatically maps subdomains and service endpoints (e.g., `accounts.google.com`, `mail.google.com` $\to$ `google.com`).
-  - Distinguishes multiple accounts under the same website (e.g., personal vs work) into distinct comparison tables.
-  - Service-aware username heuristics: recognizes that for Google, `abc123`, `abc123@gmail.com`, and `abc.123+tag@googlemail.com` are the exact same account and groups them into one comparison table.
+- **🔒 100% Local & Air-Gapped**: Runs entirely on `127.0.0.1:8765`. Zero internet access, zero telemetry, zero analytics, and zero cloud calls. All CSS, JavaScript, and fonts are bundled locally. Your credentials never touch the network.
+- **🔑 Hardware Passkey Protection & Validation**:
+  - Automatically parses and detects hardware passkeys (`fido2Credentials`).
+  - Includes an import safety check: *"I use passkeys in my vault"*. If checked but no passkeys are found in the export, an alert warns you before proceeding.
+  - When merging duplicate entries, all unique hardware passkeys across duplicate rows are unioned into the survivor so no passkeys are ever lost.
+- **🧠 Account-Level Smart Normalization**:
+  - Groups subdomains and endpoints to their root domain (`accounts.google.com`, `mail.google.com` $\to$ `google.com`).
+  - Separates multiple distinct accounts under the same website (e.g. personal vs. work) into their own distinct comparison tables.
+  - Recognizes provider username nuances: on Google, `abc123`, `abc123@gmail.com`, and `abc.123+tag@googlemail.com` are recognized as the same account and grouped into one table.
 - **🔍 Visual Diffing & Column Sync**:
-  - Discrepant cells (different passwords, notes, usernames) are highlighted in amber.
-  - One-click **"Push to all"** button (`⇄`) allows propagating a chosen value across all duplicate rows in that column.
-- **✏️ In-Place Cell Editing**:
-  - Click **Edit** on any row to type or paste updated values with instant save/cancel.
-- **🛡️ Survivor Consolidation**:
+  - Highlights discrepant values (differing passwords, usernames, notes, TOTPs) in clear amber chips.
+  - Direct plain-text password comparison in `font-mono` with one-click copy.
+  - **Push Column Value (`⇄`)**: One-click sync button to propagate a chosen cell's value across all duplicate rows in that column.
+  - **In-Place Row Editing**: Click `Edit` on any row to type or paste updated values with instant Save / Cancel.
+- **🧹 Clean Dynamic Columns**:
+  - Tables automatically hide empty columns if no duplicate row in that account possesses data for that field (e.g., if neither duplicate has TOTP, the TOTP column is omitted).
+  - The **Unique Logins** page includes a **Three-Dots Menu (`⋮`)** allowing users to customize column visibility at any time.
+- **🛡️ Survivor Consolidation & Password History**:
   - Pick your preferred master row.
-  - Consolidates all passkeys, archives differing passwords to Bitwarden's `passwordHistory` array (so older passwords aren't lost), combines unique URIs and custom fields, and moves redundant entries to **Trash**.
-- **↩️ Full Undo & Redo (Non-Destructive)**:
-  - Every edit, merge, push, or delete is tracked in an in-memory transaction journal.
-  - Use `Ctrl+Z` / `Ctrl+Y` or the navbar buttons to undo or redo any action.
-  - Inspect the **Deleted Items** tab at any time to restore soft-deleted items with 1 click.
-- **📦 Fail-Safe Export & Backup**:
-  - Automatically saves an untouched timestamped `.bak` copy of your uploaded vault in `backups/`.
-  - Exports a clean, standard Bitwarden JSON file ready for re-import.
+  - Unions passkeys, appends non-empty URIs, merges notes, and automatically archives differing passwords to Bitwarden's `passwordHistory` so old credentials are never discarded.
+  - Moves redundant entries to **Trash (Deleted Items)**.
+- **↩️ Full Transactional Undo & Redo**:
+  - Every action (merge, edit, push, delete, restore) is tracked in an in-memory transaction journal (`Ctrl+Z` / `Ctrl+Y`).
+  - Inspect the **Deleted Items** tab at any time to restore soft-deleted items with 1 click before final export.
+- **⚡ 1-Click Interactive Demo**:
+  - Test out the application instantly without uploading your real vault using the built-in **"Load Demo Vault"** button.
 
 ---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.9+ (Python 3.10, 3.11, 3.12, 3.15 supported)
-- Node.js 18+ (only needed if building the frontend from source; the pre-built UI is already included!)
+- **Python 3.9+**
+- Modern Web Browser (Chrome, Edge, Firefox, Brave, Safari)
 
-### 1. Launch the Application
+### Installation & Launch
 
-#### On Windows:
-Double-click `start.bat` or run:
-```powershell
-python run.py
-```
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/zunaidFarouque/Bitwarden-Duplicate-Cleaner.git
+   cd Bitwarden-Duplicate-Cleaner
+   ```
 
-#### On macOS / Linux:
-```bash
-chmod +x start.sh
-./start.sh
-```
+2. **Install Python dependencies:**
+   ```bash
+   pip install -r backend/requirements.txt
+   ```
 
-The script will launch the local server on `http://127.0.0.1:8765` and automatically open your default browser.
+3. **Launch the application:**
+
+   - **Windows:** Double-click `start.bat` or run:
+     ```powershell
+     python run.py
+     ```
+
+   - **macOS / Linux:**
+     ```bash
+     chmod +x start.sh
+     ./start.sh
+     ```
+
+The local server will start on `http://127.0.0.1:8765` and automatically open your default browser.
 
 ---
 
 ## 📖 How to Export from Bitwarden with Passkeys
 
-Passkeys are hardware-backed FIDO2 credentials. To ensure they are included in your export:
+Passkeys are hardware-backed FIDO2 credentials. To ensure they are preserved in your export:
 
 > [!CAUTION]
-> **Never export as CSV for passkeys!**  
+> **Never export as CSV if you use passkeys!**  
 > Bitwarden CSV exports **strip all passkeys**, custom fields, and password history. You must export as **JSON**.
 
-### Recommended Steps:
-1. Open the [Bitwarden Web Vault](https://vault.bitwarden.com) in your browser.
+### Recommended Export Steps:
+1. Log in to the [Bitwarden Web Vault](https://vault.bitwarden.com) in your browser.
 2. Click **Tools** in the top navigation bar.
 3. Select **Export Vault** from the left navigation panel.
 4. Set **File Format** to:
-   - **`.json` (Unencrypted)** — *Recommended for local processing with this cleaner.*
-   - *(Optional: `.json (Password-Protected)`)*
+   - **`.json` (Unencrypted)** — *Recommended for local processing.*
+   - *(Or `.json (Password-Protected)` if preferred).*
 5. Enter your Master Password and click **Export Vault**.
 6. Save the downloaded `.json` file to your computer.
 
 ---
 
-## 🖥️ User Workflow Walkthrough
+## 🖥️ Interactive Workflow
 
 ```mermaid
 flowchart LR
-    A["1. Import JSON<br/>(Check Passkeys)"] --> B["2. Review Sidebar<br/>(Domains & Accounts)"]
+    A["1. Import JSON<br/>(Passkey Check)"] --> B["2. Review Sidebar<br/>(Domains & Accounts)"]
     B --> C["3. Inspect Account Tables<br/>(Visual Diffing)"]
-    C --> D["4. Edit / Push Values / Select Survivor"]
+    C --> D["4. Edit / Push Values / Pick Survivor"]
     D --> E["5. Consolidate into Survivor"]
     E --> F["6. Export Cleaned JSON"]
 ```
 
-### 1. Import Screen
-- Drag and drop your exported Bitwarden `.json` file into the dropzone.
-- Check the box: **"I use passkeys in my Bitwarden vault"**.
-- If checked and no passkeys are found, an alert warning will appear allowing you to re-export or proceed knowingly.
+### 1. Import
+- Drag & drop your Bitwarden `.json` file.
+- Check *"I use passkeys in my Bitwarden vault"*.
+- If you don't have a vault file handy, click **"Load Demo Vault"** to explore with pre-loaded mock data.
 
-### 2. Left Sidebar Navigation
-- **Duplicate Groups**: Categorized by website domain (e.g. `google.com (2 accounts, 5 items)`).
-- **Unique Logins**: Safe items with zero duplicates.
-- **Modified & Merged**: Items updated during your active session.
-- **Deleted (Trash)**: Soft-deleted items that will be excluded from export. Click **Restore** on any item to bring it back.
+### 2. Compare & Diff
+- Navigate the left sidebar by website domain.
+- Each unique account under a domain has its own dedicated comparison table.
+- Passwords are shown in plain text for easy comparison. Discrepancies are highlighted in amber.
+- Hover over any cell to see full text in a tooltip if truncated.
+- Hover over a discrepant cell to click `⇄` and push its value to all other duplicate rows.
 
-### 3. Website Comparison Tables
-- When you click a website (e.g., `google.com`), you see a table for each unique normalized account:
-  - **Survivor Radio**: Select which duplicate entry is the master.
-  - **Amber Highlights**: Clearly indicate differing passwords, usernames, or notes.
-  - **Hover Action**: Click `⇄` next to any discrepant cell to push that value across all rows in that column.
-  - **Edit Button**: Turn any row into editable text fields for quick edits or copy-pasting.
-  - **Consolidate Button**: Unions passkeys into the survivor, saves differing passwords into `passwordHistory`, combines notes, and sends duplicate entries to Trash.
+### 3. Consolidate
+- Select your preferred survivor row with the radio button.
+- Click **"Consolidate into Survivor"**:
+  - Combines all unique passkeys (`fido2Credentials`).
+  - Appends non-empty URIs and notes.
+  - Archives differing passwords to `passwordHistory`.
+  - Sends redundant duplicate rows to **Trash**.
 
-### 4. Export & Re-Import into Bitwarden
+### 4. Re-Import Safely into Bitwarden
 1. Click **Export Clean JSON** in the top navigation bar.
-2. Confirm the metrics and download your cleaned `.json` file.
-3. In Bitwarden Web Vault:
-   - Go to **Tools $\to$ Import Data**.
-   - Select Format: **Bitwarden (JSON)**.
-   - Choose the cleaned file and complete the import.
-   - *(Tip: You can purge your vault under Settings $\to$ My Account $\to$ Purge Vault before importing, or import into a test organization/folder first).*
+2. In the Bitwarden Web Vault, navigate to **Tools $\to$ Import Data**.
+3. Choose format: **Bitwarden (JSON)**.
+4. Select your downloaded `bitwarden_cleaned_export.json`.
+5. *(Tip: Because Bitwarden appends imports, you can purge your vault under `Settings` $\to$ `My Account` $\to$ `Purge Vault` before importing, or import into a dedicated test folder/organization first).*
 
 ---
 
-## 🧪 Testing & Verification
+## 🧪 Comprehensive Test Suite
 
-Run the comprehensive unit and integration test suite:
+The project includes an exhaustive automated test suite covering unit tests, domain normalization permutations, username heuristics, passkey unions, state machine stress chains, and schema compliance:
 
 ```bash
-# Run all tests
+# Run all 59 automated tests
 python -m unittest discover tests
 ```
 
-Tests cover:
-- TLD and subdomain extraction (`extract_domain_from_uri`).
-- Provider-specific username normalization (`google.com`, Gmail dots, `+` aliases).
-- Deduplication grouping and cell diff flag calculation.
-- Passkey unioning and `passwordHistory` archiving.
-- Transactional Undo / Redo lifecycle.
-- Schema compliance of the exported Bitwarden JSON.
+### Test Suite Breakdown:
+- **`tests/test_core.py`**: Base parsing, passkey detection, diff calculation, and session undo/redo.
+- **`tests/test_permutations_core.py`**: Exhaustive combinatorial tests covering all 28 country-code second-level domains (ccSLDs), subdomains, IPv4/localhost, app URIs, username heuristics, and passkey unions.
+- **`tests/test_state_permutations.py`**: 12-step mutation stress chains, multi-domain isolation, branching history, and mathematical invariant verification.
+- **`tests/test_bitwarden_export_schema.py`**: Round-trip import/export idempotency and official Bitwarden JSON schema validation for Logins, Cards, Secure Notes, and Identities.
+- **`tests/test_api_integration.py`**: End-to-end FastAPI endpoint workflows and demo vault loading.
 
 ---
 
-## 🛠️ Project Structure
+## 📁 Repository Structure
 
 ```
 Bitwarden-Duplicate-Cleaner/
 ├── backend/
 │   ├── app/
-│   │   ├── consolidator.py   # Merging logic (passkey union, password history archiving)
-│   │   ├── deduplicator.py   # Account grouping & cell diff detector
-│   │   ├── main.py           # FastAPI routes & static file server
-│   │   ├── models.py         # Bitwarden schemas & UI DTOs
-│   │   ├── normalizer.py     # Domain eTLD+1 & email heuristic parser
-│   │   ├── parser.py         # Vault parser, passkey validator, backup snapshot
-│   │   ├── session.py        # Active state manager & undo/redo stack
-│   │   └── static/           # Pre-built production frontend bundle
-│   └── requirements.txt      # Python dependencies
-├── frontend/
+│   │   ├── consolidator.py     # Survivor merging (passkeys, password history, URIs)
+│   │   ├── deduplicator.py     # Domain/account grouping & cell diff detector
+│   │   ├── main.py             # FastAPI REST endpoints & static file server
+│   │   ├── models.py           # Bitwarden schemas & UI DTOs
+│   │   ├── normalizer.py       # eTLD+1 & provider username normalization
+│   │   ├── parser.py           # Bitwarden JSON validator & backup generator
+│   │   ├── session.py          # Session state manager & undo/redo stack
+│   │   └── static/             # Pre-built production React bundle
+│   └── requirements.txt        # Python backend dependencies
+├── frontend/                   # React + TypeScript + Tailwind source code
 │   ├── src/
-│   │   ├── api/client.ts     # Typed API client
-│   │   ├── components/       # Table, Sidebar, Modals, Diff highlighters
-│   │   ├── types/            # TypeScript definitions
-│   │   ├── App.tsx           # Main application shell
-│   │   └── index.css         # Tailwind styling
+│   │   ├── components/         # Table, Sidebar, Modals, Diff highlighters
+│   │   ├── api/client.ts       # Typed API client
+│   │   ├── types/              # TypeScript definitions
+│   │   └── App.tsx             # Application shell
 │   ├── package.json
 │   └── vite.config.ts
-├── tests/
-│   ├── test_core.py          # Core normalization and deduplication tests
-│   └── test_api_integration.py # End-to-end user workflow tests
-├── run.py                    # One-click Python launcher
-├── start.bat                 # Windows double-click runner
-├── start.sh                  # macOS/Linux runner
+├── demo/
+│   └── sample_bitwarden_vault.json # Comprehensive 15-item sample vault
+├── tests/                      # 59 automated tests
+│   ├── test_core.py
+│   ├── test_permutations_core.py
+│   ├── test_state_permutations.py
+│   ├── test_bitwarden_export_schema.py
+│   └── test_api_integration.py
+├── run.py                      # One-click Python runner
+├── start.bat                   # Windows double-click launcher
+├── start.sh                    # macOS / Linux launcher
+├── LICENSE                     # MIT License
 └── README.md
 ```
 
 ---
 
-## 🛡️ License & Privacy Assurance
+## 🔒 Security & Privacy Guarantee
 
-This project is licensed under the MIT License. It is designed to be completely air-gapped: no analytics, no external servers, and no tracking. You are in complete control of your vault data.
+- **No Remote Telemetry**: The application connects to no remote servers whatsoever.
+- **Localhost Only**: The backend strictly binds to `127.0.0.1`.
+- **Automatic Backup**: Every uploaded vault file is automatically preserved in an untouched, timestamped copy in `backups/` before any mutations take place.
+
+---
+
+## 📄 License
+
+Distributed under the [MIT License](LICENSE). Copyright &copy; 2026 Zunaid Farouque.
