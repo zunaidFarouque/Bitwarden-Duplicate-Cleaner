@@ -35,6 +35,7 @@ export const App: React.FC = () => {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
 
   // Refresh all state
   const refreshAll = useCallback(async (viewOverride?: ActiveView) => {
@@ -186,6 +187,18 @@ export const App: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [sidebar.canUndo, sidebar.canRedo]);
 
+  const handleLoadDemo = async () => {
+    try {
+      setDemoLoading(true);
+      const res = await api.loadDemo();
+      onImportSuccess(res.stats);
+    } catch (err) {
+      console.error('Failed to load demo vault:', err);
+    } finally {
+      setDemoLoading(false);
+    }
+  };
+
   const onImportSuccess = (newStats: VaultStats) => {
     setStats(newStats);
     refreshAll();
@@ -225,12 +238,22 @@ export const App: React.FC = () => {
               <p className="text-xs text-slate-400 max-w-sm mb-6">
                 Import your Bitwarden JSON export to start comparing, resolving differences, and safely consolidating duplicates.
               </p>
-              <button
-                onClick={() => setIsImportOpen(true)}
-                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-indigo-600/25 flex items-center gap-2"
-              >
-                <Upload className="w-4 h-4" /> Import Bitwarden Vault
-              </button>
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <button
+                  onClick={() => setIsImportOpen(true)}
+                  className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-xl transition shadow-lg shadow-indigo-600/25 flex items-center gap-2"
+                >
+                  <Upload className="w-4 h-4" /> Import Bitwarden Vault
+                </button>
+                <button
+                  onClick={handleLoadDemo}
+                  disabled={demoLoading}
+                  className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-indigo-500/50 text-indigo-300 text-xs font-semibold rounded-xl transition shadow-sm flex items-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  {demoLoading ? 'Loading Demo...' : 'Load Demo Vault'}
+                </button>
+              </div>
             </div>
           ) : (
             <>

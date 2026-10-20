@@ -87,7 +87,7 @@ def get_item_primary_domain(item_uris: Optional[List[str]], item_name: str) -> s
                 return dom
     
     # Fallback to name heuristic or uncategorized
-    clean_name = item_name.strip()
+    clean_name = (item_name or "").strip()
     # If name looks like a domain (e.g. "github.com")
     if "." in clean_name and " " not in clean_name:
         dom = extract_domain_from_uri(clean_name)

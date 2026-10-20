@@ -58,9 +58,9 @@ class BitwardenItem(BaseModel):
     id: str
     organizationId: Optional[str] = None
     folderId: Optional[str] = None
-    type: int = 1  # 1 = Login, 2 = Secure Note, 3 = Card, 4 = Identity
+    type: Optional[int] = 1  # 1 = Login, 2 = Secure Note, 3 = Card, 4 = Identity
     reprompt: Optional[int] = 0
-    name: str = ""
+    name: Optional[str] = ""
     notes: Optional[str] = None
     favorite: Optional[bool] = False
     login: Optional[LoginInfo] = None
@@ -73,8 +73,8 @@ class BitwardenItem(BaseModel):
 
 class BitwardenVault(BaseModel):
     model_config = ConfigDict(extra="allow")
-    encrypted: bool = False
-    folders: List[BitwardenFolder] = Field(default_factory=list)
+    encrypted: Optional[bool] = False
+    folders: Optional[List[BitwardenFolder]] = Field(default_factory=list)
     items: List[BitwardenItem] = Field(default_factory=list)
 
 

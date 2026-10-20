@@ -135,7 +135,8 @@ def analyze_vault(
         norm_user = normalize_username(raw_user, domain)
         if not norm_user:
             # If item has no username, use item name or '(no-username)'
-            norm_user = f"_no_username_{item.name.strip().lower()}"
+            item_name_str = (item.name or "").strip().lower() or "(no-username)"
+            norm_user = f"_no_username_{item_name_str}"
 
         grouped[domain][norm_user].append(item)
 

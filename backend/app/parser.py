@@ -38,7 +38,7 @@ def parse_and_validate_vault(raw_content: str) -> Tuple[BitwardenVault, Dict[str
     stats = {
         "totalItems": len(vault.items),
         "encrypted": vault.encrypted,
-        "folderCount": len(vault.folders),
+        "folderCount": len(vault.folders or []),
         "passkeyItemCount": items_with_passkeys,
         "passkeyTotalCount": total_passkeys,
     }

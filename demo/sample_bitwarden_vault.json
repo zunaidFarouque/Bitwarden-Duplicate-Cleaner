@@ -1,0 +1,436 @@
+{
+  "encrypted": false,
+  "folders": [
+    {
+      "id": "fld-personal",
+      "name": "Personal"
+    },
+    {
+      "id": "fld-work",
+      "name": "Work"
+    },
+    {
+      "id": "fld-finance",
+      "name": "Finance"
+    }
+  ],
+  "items": [
+    {
+      "id": "item-google-1",
+      "organizationId": null,
+      "folderId": "fld-personal",
+      "type": 1,
+      "reprompt": 0,
+      "name": "Google",
+      "notes": "Primary personal Google Account with Passkey enabled.",
+      "favorite": true,
+      "login": {
+        "uris": [
+          {
+            "match": null,
+            "uri": "https://accounts.google.com"
+          }
+        ],
+        "username": "alex.turner@gmail.com",
+        "password": "PassGoogle123!",
+        "totp": null,
+        "fido2Credentials": [
+          {
+            "credentialId": "dB3m9xLk8_QZa1wP-91uVkR_Z8g2K1qN9j210Xl8q7Y",
+            "keyType": "public-key",
+            "algorithm": "ES256",
+            "curve": "P-256",
+            "rpId": "google.com",
+            "rpName": "Google",
+            "userHandle": "YWxleC50dXJuZXJAZ21haWwuY29t",
+            "userName": "alex.turner@gmail.com",
+            "counter": 15,
+            "creationDate": "2026-01-15T08:30:00Z"
+          }
+        ]
+      },
+      "collectionIds": null,
+      "creationDate": "2026-01-15T08:30:00.000Z",
+      "revisionDate": "2026-03-20T11:15:00.000Z"
+    },
+    {
+      "id": "item-google-2",
+      "organizationId": null,
+      "folderId": "fld-personal",
+      "type": 1,
+      "reprompt": 0,
+      "name": "Gmail Login",
+      "notes": "Old webmail bookmark before enabling hardware passkey.",
+      "favorite": false,
+      "login": {
+        "uris": [
+          {
+            "match": null,
+            "uri": "https://mail.google.com"
+          }
+        ],
+        "username": "alexturner",
+        "password": "OldPass2025",
+        "totp": "otpauth://totp/Google:alexturner?secret=JBSWY3DPEHPK3PXP&issuer=Google",
+        "fido2Credentials": []
+      },
+      "collectionIds": null,
+      "creationDate": "2025-05-10T14:22:00.000Z",
+      "revisionDate": "2025-11-04T09:12:00.000Z"
+    },
+    {
+      "id": "item-google-3",
+      "organizationId": null,
+      "folderId": "fld-personal",
+      "type": 1,
+      "reprompt": 0,
+      "name": "Google Account (Android)",
+      "notes": "Recovery email is backup@yahoo.com",
+      "favorite": false,
+      "login": {
+        "uris": [
+          {
+            "match": null,
+            "uri": "androidapp://com.google.android.gm"
+          }
+        ],
+        "username": "alex.turner+personal@googlemail.com",
+        "password": "PassGoogle123!",
+        "totp": null,
+        "fido2Credentials": []
+      },
+      "fields": [
+        {
+          "name": "Mother Maiden Name",
+          "value": "Smith",
+          "type": 0
+        }
+      ],
+      "collectionIds": null,
+      "creationDate": "2025-08-19T18:05:00.000Z",
+      "revisionDate": "2026-02-12T16:40:00.000Z"
+    },
+    {
+      "id": "item-google-work-1",
+      "organizationId": null,
+      "folderId": "fld-work",
+      "type": 1,
+      "reprompt": 0,
+      "name": "Acme Google Workspace SSO",
+      "notes": "Corporate Google Workspace email and calendar login.",
+      "favorite": false,
+      "login": {
+        "uris": [
+          {
+            "match": null,
+            "uri": "https://accounts.google.com/o/saml2/initsso?idpid=acme"
+          }
+        ],
+        "username": "alex.turner@acmecorp.com",
+        "password": "AcmeCorporatePassword2026!",
+        "totp": null,
+        "fido2Credentials": []
+      },
+      "collectionIds": null,
+      "creationDate": "2026-01-05T09:00:00.000Z",
+      "revisionDate": "2026-04-01T10:00:00.000Z"
+    },
+    {
+      "id": "item-google-work-2",
+      "organizationId": null,
+      "folderId": "fld-work",
+      "type": 1,
+      "reprompt": 0,
+      "name": "Google Drive - Acme Corp",
+      "notes": "Shared client deliverables and team drive credentials.",
+      "favorite": false,
+      "login": {
+        "uris": [
+          {
+            "match": null,
+            "uri": "https://drive.google.com"
+          }
+        ],
+        "username": "alex.turner@acmecorp.com",
+        "password": "AcmeOldPassword2025#",
+        "totp": null,
+        "fido2Credentials": []
+      },
+      "collectionIds": null,
+      "creationDate": "2025-09-15T11:20:00.000Z",
+      "revisionDate": "2025-12-10T15:30:00.000Z"
+    },
+    {
+      "id": "item-github-1",
+      "organizationId": null,
+      "folderId": "fld-work",
+      "type": 1,
+      "reprompt": 0,
+      "name": "GitHub",
+      "notes": "Main development profile. Personal Access Token (PAT) expires Dec 2026.",
+      "favorite": true,
+      "login": {
+        "uris": [
+          {
+            "match": null,
+            "uri": "https://github.com/login"
+          }
+        ],
+        "username": "alexturner-dev",
+        "password": "ghp_secureTokenPassphrase2026!",
+        "totp": "otpauth://totp/GitHub:alexturner-dev?secret=HXDMVJECJJWSRB3HWIZR4IFUGFTMXBOZ&issuer=GitHub",
+        "fido2Credentials": []
+      },
+      "collectionIds": null,
+      "creationDate": "2025-03-12T13:45:00.000Z",
+      "revisionDate": "2026-02-28T17:10:00.000Z"
+    },
+    {
+      "id": "item-github-2",
+      "organizationId": null,
+      "folderId": "fld-work",
+      "type": 1,
+      "reprompt": 0,
+      "name": "GitHub (Work Laptop)",
+      "notes": "Configured with SSH key id_ed25519 on ThinkPad T14s.",
+      "favorite": false,
+      "login": {
+        "uris": [
+          {
+            "match": null,
+            "uri": "https://github.com"
+          }
+        ],
+        "username": "alexturner-dev",
+        "password": "ghp_legacyPassphrase2024",
+        "totp": null,
+        "fido2Credentials": []
+      },
+      "fields": [
+        {
+          "name": "Recovery Codes",
+          "value": "4b7e-91c2-3f8a",
+          "type": 1
+        }
+      ],
+      "collectionIds": null,
+      "creationDate": "2024-11-20T10:15:00.000Z",
+      "revisionDate": "2025-06-14T08:50:00.000Z"
+    },
+    {
+      "id": "item-amazon-1",
+      "organizationId": null,
+      "folderId": "fld-finance",
+      "type": 1,
+      "reprompt": 0,
+      "name": "Amazon.com",
+      "notes": "Prime subscription renews annually on Nov 15th.",
+      "favorite": true,
+      "login": {
+        "uris": [
+          {
+            "match": null,
+            "uri": "https://www.amazon.com/ap/signin"
+          }
+        ],
+        "username": "alex.turner@gmail.com",
+        "password": "AmazonCurrentPassword2026!",
+        "totp": null,
+        "fido2Credentials": []
+      },
+      "collectionIds": null,
+      "creationDate": "2025-11-15T12:00:00.000Z",
+      "revisionDate": "2026-03-10T14:25:00.000Z"
+    },
+    {
+      "id": "item-amazon-2",
+      "organizationId": null,
+      "folderId": "fld-personal",
+      "type": 1,
+      "reprompt": 0,
+      "name": "Amazon Shopping",
+      "notes": "Saved payment method: Chase Sapphire ending 4242.",
+      "favorite": false,
+      "login": {
+        "uris": [
+          {
+            "match": null,
+            "uri": "https://amazon.com"
+          }
+        ],
+        "username": "alex.turner@gmail.com",
+        "password": "AmazonOldPassword2024",
+        "totp": null,
+        "fido2Credentials": []
+      },
+      "collectionIds": null,
+      "creationDate": "2024-06-25T19:30:00.000Z",
+      "revisionDate": "2025-01-08T11:45:00.000Z"
+    },
+    {
+      "id": "item-netflix-unique",
+      "organizationId": null,
+      "folderId": "fld-personal",
+      "type": 1,
+      "reprompt": 0,
+      "name": "Netflix",
+      "notes": "Standard 4K UHD plan shared with family profile.",
+      "favorite": false,
+      "login": {
+        "uris": [
+          {
+            "match": null,
+            "uri": "https://www.netflix.com/login"
+          }
+        ],
+        "username": "alex.turner@gmail.com",
+        "password": "NetflixPasswordStream99!",
+        "totp": null,
+        "fido2Credentials": []
+      },
+      "collectionIds": null,
+      "creationDate": "2025-02-14T20:10:00.000Z",
+      "revisionDate": "2025-09-01T15:00:00.000Z"
+    },
+    {
+      "id": "item-spotify-unique",
+      "organizationId": null,
+      "folderId": "fld-personal",
+      "type": 1,
+      "reprompt": 0,
+      "name": "Spotify",
+      "notes": "Premium Duo subscription.",
+      "favorite": false,
+      "login": {
+        "uris": [
+          {
+            "match": null,
+            "uri": "https://accounts.spotify.com"
+          }
+        ],
+        "username": "alexturner_music",
+        "password": "SpotifySoundWave2026$",
+        "totp": null,
+        "fido2Credentials": []
+      },
+      "collectionIds": null,
+      "creationDate": "2025-04-18T16:30:00.000Z",
+      "revisionDate": "2025-10-22T19:40:00.000Z"
+    },
+    {
+      "id": "item-bitwarden-unique",
+      "organizationId": null,
+      "folderId": "fld-personal",
+      "type": 1,
+      "reprompt": 1,
+      "name": "Bitwarden Vault",
+      "notes": "Master Password - Never share. Offline backup saved in home safe.",
+      "favorite": true,
+      "login": {
+        "uris": [
+          {
+            "match": null,
+            "uri": "https://vault.bitwarden.com"
+          }
+        ],
+        "username": "alex.turner@gmail.com",
+        "password": "MasterKey!UltraSecure#Bitwarden2026",
+        "totp": null,
+        "fido2Credentials": []
+      },
+      "collectionIds": null,
+      "creationDate": "2024-01-01T00:00:00.000Z",
+      "revisionDate": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "item-cloudflare-unique",
+      "organizationId": null,
+      "folderId": "fld-work",
+      "type": 1,
+      "reprompt": 1,
+      "name": "Cloudflare Dashboard",
+      "notes": "DNS and Edge Worker administration. Protected with two hardware security keys.",
+      "favorite": true,
+      "login": {
+        "uris": [
+          {
+            "match": null,
+            "uri": "https://dash.cloudflare.com"
+          }
+        ],
+        "username": "alex.turner@gmail.com",
+        "password": "CloudflareDashboardAdmin2026#!",
+        "totp": null,
+        "fido2Credentials": [
+          {
+            "credentialId": "K8zL2pQ9mR4tW1vX6yB0cN7aE3dF5gH8jK1lO4qS7uV",
+            "keyType": "public-key",
+            "algorithm": "ES256",
+            "curve": "P-256",
+            "rpId": "cloudflare.com",
+            "rpName": "YubiKey 5C NFC",
+            "userHandle": "YWxleC50dXJuZXJAY2xvdWRmbGFyZQ==",
+            "userName": "alex.turner@gmail.com",
+            "counter": 42,
+            "creationDate": "2026-02-10T14:20:00Z"
+          },
+          {
+            "credentialId": "T9xM4bV7cK2wP5yL0aQ8nE1dF6gH3jK9mO2rS5uV8wZ",
+            "keyType": "public-key",
+            "algorithm": "ES256",
+            "curve": "P-256",
+            "rpId": "cloudflare.com",
+            "rpName": "Windows Hello (Backup Key)",
+            "userHandle": "YWxleC50dXJuZXJAY2xvdWRmbGFyZQ==",
+            "userName": "alex.turner@gmail.com",
+            "counter": 8,
+            "creationDate": "2026-03-01T09:15:00Z"
+          }
+        ]
+      },
+      "collectionIds": null,
+      "creationDate": "2025-07-20T10:15:00.000Z",
+      "revisionDate": "2026-03-01T09:15:00.000Z"
+    },
+    {
+      "id": "item-router-unique",
+      "organizationId": null,
+      "folderId": "fld-personal",
+      "type": 1,
+      "reprompt": 0,
+      "name": "Wi-Fi Router Admin",
+      "notes": "Asus RT-AX88U admin portal at 192.168.50.1. Wi-Fi SSID: TurnerHome_5G",
+      "favorite": false,
+      "login": {
+        "uris": [],
+        "username": "admin",
+        "password": "RouterSecretPassword!2026",
+        "totp": null,
+        "fido2Credentials": []
+      },
+      "collectionIds": null,
+      "creationDate": "2024-08-11T12:00:00.000Z",
+      "revisionDate": "2025-03-15T16:20:00.000Z"
+    },
+    {
+      "id": "item-steamguard-unique",
+      "organizationId": null,
+      "folderId": "fld-personal",
+      "type": 1,
+      "reprompt": 0,
+      "name": "Steam Guard App",
+      "notes": "Mobile authenticator backup recovery code stored in safe. R-Code: R12345",
+      "favorite": false,
+      "login": {
+        "uris": [],
+        "username": "alex_gamer99",
+        "password": "SteamGamingPassword#2026",
+        "totp": null,
+        "fido2Credentials": []
+      },
+      "collectionIds": null,
+      "creationDate": "2024-05-19T18:40:00.000Z",
+      "revisionDate": "2025-04-20T11:10:00.000Z"
+    }
+  ]
+}

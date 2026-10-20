@@ -52,7 +52,7 @@ class VaultSession:
     ) -> VaultStats:
         self.initialized = True
         self.encrypted = vault.encrypted
-        self.folders = [f.model_copy(deep=True) for f in vault.folders]
+        self.folders = [f.model_copy(deep=True) for f in (vault.folders or [])]
         self.active_items = {item.id: item.model_copy(deep=True) for item in vault.items}
         self.deleted_items = {}
         self.modified_ids = set()
@@ -187,6 +187,9 @@ class VaultSession:
         if len(duplicate_items) <= 1:
             return False
 
+        if survivor_id not in [it.id for it in duplicate_items]:
+            return False
+
         self._save_snapshot(f"Merge into {survivor_item.name} for {domain}")
 
         # Consolidate survivor
@@ -211,16 +214,19 @@ class VaultSession:
 
         new_item = item.model_copy(deep=True)
         if field == "name":
-            new_item.name = str(value)
+            new_item.name = str(value) if value is not None else ""
         elif field == "notes":
-            new_item.notes = str(value)
+            new_item.notes = str(value) if value is not None else None
         elif new_item.login:
             if field == "username":
-                new_item.login.username = str(value)
+                new_item.login.username = str(value) if value is not None else None
             elif field == "password":
-                new_item.login.password = str(value)
+                new_item.login.password = str(value) if value is not None else None
             elif field == "totp":
-                new_item.login.totp = str(value)
+                new_item.login.totp = str(value) if value is not None else None
+        elif field in ("username", "password", "totp"):
+            from backend.app.models import LoginInfo
+            new_item.login = LoginInfo(**{field: str(value) if value is not None else None})
 
         self.active_items[item_id] = new_item
         self.modified_ids.add(item_id)
@@ -241,6 +247,9 @@ class VaultSession:
             for it in target_acct.items
             if it.id in self.active_items
         ]
+
+        if source_item_id not in [it.id for it in items_to_update]:
+            return False
 
         self._save_snapshot(f"Push {field} from {source_item_id}")
 

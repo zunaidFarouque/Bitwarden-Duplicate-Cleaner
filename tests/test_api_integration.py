@@ -1,4 +1,5 @@
 import json
+import os
 import unittest
 from fastapi.testclient import TestClient
 from backend.app.main import app
@@ -98,23 +99,24 @@ class TestIntegration(unittest.TestCase):
         # 3. Check sidebar
         sidebar_resp = self.client.get("/api/sidebar")
         self.assertEqual(sidebar_resp.status_code, 200)
-        sb_data = sidebar_resp.json()
-        self.assertEqual(len(sb_data["domains"]), 1)
-        self.assertEqual(sb_data["domains"][0]["domain"], "google.com")
-        self.assertEqual(sb_data["uniqueCount"], 2)
+        s_data = sidebar_resp.json()
+        self.assertEqual(len(s_data["domains"]), 1)
+        self.assertEqual(s_data["domains"][0]["domain"], "google.com")
+        self.assertEqual(s_data["domains"][0]["totalItems"], 2)
+        self.assertEqual(s_data["uniqueCount"], 2)
 
-        # 4. Check domain duplicates
+        # 4. Check duplicate detail view
         dup_resp = self.client.get("/api/duplicates/google.com")
         self.assertEqual(dup_resp.status_code, 200)
-        group = dup_resp.json()
-        self.assertEqual(group["domain"], "google.com")
-        self.assertEqual(group["totalAccounts"], 1)
-        self.assertEqual(len(group["accounts"][0]["items"]), 2)
-        # Verify diff fields detected password and totp
-        self.assertIn("password", group["accounts"][0]["diffFields"])
-        self.assertIn("totp", group["accounts"][0]["diffFields"])
+        d_group = dup_resp.json()
+        self.assertEqual(d_group["domain"], "google.com")
+        self.assertEqual(len(d_group["accounts"]), 1)
+        acc = d_group["accounts"][0]
+        self.assertEqual(acc["itemCount"], 2)
+        self.assertTrue(acc["hasPasskeys"])
+        self.assertIn("password", acc["diffFields"])
 
-        # 5. Push value across account duplicates (e.g. push name)
+        # 5. Push field value (e.g. push name from item-g1 to all)
         push_resp = self.client.post("/api/push", json={
             "domain": "google.com",
             "accountId": "abc123@gmail.com",
@@ -177,6 +179,91 @@ class TestIntegration(unittest.TestCase):
         # Should contain exactly 3 active items (item-g1, item-g3, item-gh1), item-g2 is excluded!
         exported_ids = {it["id"] for it in exported_vault["items"]}
         self.assertEqual(exported_ids, {"item-g1", "item-g3", "item-gh1"})
+
+    def test_load_demo_vault_endpoint(self):
+        # 1. Trigger POST /api/load-demo
+        resp = self.client.post("/api/load-demo")
+        self.assertEqual(resp.status_code, 200)
+        data = resp.json()
+        self.assertTrue(data["success"])
+        self.assertTrue(os.path.exists(data["backupPath"]))
+        stats = data["stats"]
+
+        # Verify stats summary
+        self.assertEqual(stats["totalItems"], 15)
+        self.assertEqual(stats["duplicateCount"], 9)
+        self.assertEqual(stats["uniqueCount"], 6)
+        self.assertEqual(stats["passkeyTotalCount"], 3)
+        self.assertEqual(stats["passkeyItemCount"], 2)
+        self.assertFalse(stats["hasWarning"])
+
+        # 2. Check sidebar domains
+        side_resp = self.client.get("/api/sidebar")
+        self.assertEqual(side_resp.status_code, 200)
+        side_data = side_resp.json()
+        domain_names = [d["domain"] for d in side_data["domains"]]
+        self.assertIn("google.com", domain_names)
+        self.assertIn("github.com", domain_names)
+        self.assertIn("amazon.com", domain_names)
+        self.assertEqual(side_data["uniqueCount"], 6)
+
+        # 3. Check Google domain: 2 accounts (alexturner@gmail.com, alex.turner@acmecorp.com)
+        google_resp = self.client.get("/api/duplicates/google.com")
+        self.assertEqual(google_resp.status_code, 200)
+        google_group = google_resp.json()
+        self.assertEqual(google_group["totalAccounts"], 2)
+        self.assertEqual(google_group["totalItems"], 5)
+        self.assertTrue(google_group["hasPasskeys"])
+
+        accounts = {a["normalizedUsername"]: a for a in google_group["accounts"]}
+        self.assertIn("alexturner@gmail.com", accounts)
+        self.assertIn("alex.turner@acmecorp.com", accounts)
+
+        personal_acc = accounts["alexturner@gmail.com"]
+        self.assertEqual(personal_acc["itemCount"], 3)
+        self.assertTrue(personal_acc["hasPasskeys"])
+        self.assertIn("passkeys", personal_acc["diffFields"])
+
+        work_acc = accounts["alex.turner@acmecorp.com"]
+        self.assertEqual(work_acc["itemCount"], 2)
+        self.assertFalse(work_acc["hasPasskeys"])
+
+        # 4. Check GitHub domain: 1 account with 2 items
+        gh_resp = self.client.get("/api/duplicates/github.com")
+        self.assertEqual(gh_resp.status_code, 200)
+        gh_group = gh_resp.json()
+        self.assertEqual(gh_group["totalAccounts"], 1)
+        self.assertEqual(gh_group["totalItems"], 2)
+        self.assertIn("password", gh_group["accounts"][0]["diffFields"])
+
+        # 5. Check Amazon domain: 1 account across subdomains
+        amz_resp = self.client.get("/api/duplicates/amazon.com")
+        self.assertEqual(amz_resp.status_code, 200)
+        amz_group = amz_resp.json()
+        self.assertEqual(amz_group["totalAccounts"], 1)
+        self.assertEqual(amz_group["totalItems"], 2)
+
+        # 6. Check unique items: Netflix, Spotify, Bitwarden, Cloudflare (2 passkeys), Wi-Fi Router, Steam Guard
+        unique_resp = self.client.get("/api/unique")
+        self.assertEqual(unique_resp.status_code, 200)
+        unique_items = unique_resp.json()["items"]
+        self.assertEqual(len(unique_items), 6)
+        unique_names = {u["name"] for u in unique_items}
+        self.assertIn("Netflix", unique_names)
+        self.assertIn("Spotify", unique_names)
+        self.assertIn("Bitwarden Vault", unique_names)
+        self.assertIn("Cloudflare Dashboard", unique_names)
+        self.assertIn("Wi-Fi Router Admin", unique_names)
+        self.assertIn("Steam Guard App", unique_names)
+
+        # Verify Cloudflare has 2 passkeys
+        cloudflare = next(u for u in unique_items if u["name"] == "Cloudflare Dashboard")
+        self.assertEqual(cloudflare["passkeyCount"], 2)
+        self.assertEqual(len(cloudflare["passkeyDetails"]), 2)
+
+        # Verify Wi-Fi Router Admin has no URIs
+        router = next(u for u in unique_items if u["name"] == "Wi-Fi Router Admin")
+        self.assertEqual(len(router["uris"]), 0)
 
 
 if __name__ == "__main__":

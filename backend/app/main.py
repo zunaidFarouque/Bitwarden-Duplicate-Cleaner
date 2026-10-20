@@ -65,6 +65,39 @@ async def upload_vault(
     }
 
 
+@app.post("/api/load-demo")
+async def load_demo_vault():
+    demo_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "..", "demo", "sample_bitwarden_vault.json")
+    )
+    if not os.path.exists(demo_path):
+        raise HTTPException(status_code=404, detail="Demo vault file not found")
+
+    try:
+        with open(demo_path, "r", encoding="utf-8") as f:
+            raw_content = f.read()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to read demo vault: {str(e)}")
+
+    try:
+        vault, _ = parse_and_validate_vault(raw_content)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    # Load into session with passkeys enabled and demo path as reference backup
+    stats = session.load_vault(
+        vault=vault,
+        user_claimed_passkeys=True,
+        backup_path=demo_path
+    )
+
+    return {
+        "success": True,
+        "backupPath": demo_path,
+        "stats": stats,
+    }
+
+
 @app.get("/api/stats")
 async def get_stats():
     if not session.initialized:
@@ -86,7 +119,7 @@ async def get_sidebar():
     return {
         "domains": domain_summaries,
         "uniqueCount": len(unique_items),
-        "modifiedCount": len(session.modified_ids),
+        "modifiedCount": len(session.modified_ids.intersection(session.active_items.keys())),
         "deletedCount": len(session.deleted_items),
         "canUndo": len(session.undo_stack) > 0,
         "canRedo": len(session.redo_stack) > 0,

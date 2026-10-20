@@ -8,6 +8,17 @@ import type {
 const BASE_URL = '/api';
 
 export const api = {
+  async loadDemo(): Promise<{ success: boolean; stats: VaultStats; backupPath: string }> {
+    const res = await fetch(`${BASE_URL}/load-demo`, {
+      method: 'POST',
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || 'Failed to load demo vault');
+    }
+    return res.json();
+  },
+
   async uploadVault(file: File, hasPasskeys: boolean): Promise<{ success: boolean; stats: VaultStats; backupPath: string }> {
     const formData = new FormData();
     formData.append('file', file);

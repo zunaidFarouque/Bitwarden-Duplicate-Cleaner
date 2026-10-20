@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, KeyRound, AlertTriangle, HelpCircle, FileText } from 'lucide-react';
+import { UploadCloud, KeyRound, AlertTriangle, HelpCircle, FileText, Sparkles } from 'lucide-react';
 import { api } from '../api/client';
 import type { VaultStats } from '../types';
 
@@ -13,6 +13,7 @@ interface Props {
 export const ImportModal: React.FC<Props> = ({ isOpen, onClose, onImportSuccess, onOpenHelp }) => {
   const [file, setFile] = useState<File | null>(null);
   const [hasPasskeys, setHasPasskeys] = useState<boolean>(true);
+  const [demoLoading, setDemoLoading] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
@@ -61,6 +62,22 @@ export const ImportModal: React.FC<Props> = ({ isOpen, onClose, onImportSuccess,
       setError(err.message || 'Failed to upload and parse vault');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLoadDemo = async () => {
+    setDemoLoading(true);
+    setError(null);
+    setWarning(null);
+
+    try {
+      const res = await api.loadDemo();
+      onImportSuccess(res.stats);
+      onClose();
+    } catch (err: any) {
+      setError(err.message || 'Failed to load demo vault');
+    } finally {
+      setDemoLoading(false);
     }
   };
 
@@ -191,26 +208,56 @@ export const ImportModal: React.FC<Props> = ({ isOpen, onClose, onImportSuccess,
               </div>
             )}
 
-            <div className="flex justify-end gap-3 pt-2">
+            {/* Try with Demo Data Banner */}
+            <div className="flex items-center justify-between p-3.5 bg-indigo-950/40 border border-indigo-500/30 rounded-xl">
+              <div className="flex items-center gap-2.5">
+                <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                <div>
+                  <div className="text-xs font-semibold text-slate-200">Try with Demo Data</div>
+                  <div className="text-[11px] text-slate-400">Load realistic sample logins (Google, GitHub, Amazon duplicates + Passkeys).</div>
+                </div>
+              </div>
               <button
                 type="button"
-                onClick={onClose}
-                className="px-4 py-2 bg-slate-700/70 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-xl transition"
+                disabled={loading || demoLoading}
+                onClick={handleLoadDemo}
+                className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition whitespace-nowrap shadow-sm shadow-indigo-600/30"
               >
-                Cancel
+                {demoLoading ? 'Loading...' : 'Try Demo Vault'}
               </button>
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
               <button
                 type="button"
-                disabled={!file || loading}
-                onClick={handleUpload}
-                className={`px-5 py-2 text-sm font-semibold rounded-xl transition shadow-lg ${
-                  !file || loading
-                    ? 'bg-slate-700 text-slate-500 cursor-not-allowed shadow-none'
-                    : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/20'
-                }`}
+                disabled={loading || demoLoading}
+                onClick={handleLoadDemo}
+                className="text-xs text-indigo-400 hover:text-indigo-300 font-medium flex items-center gap-1.5"
               >
-                {loading ? 'Analyzing Vault...' : 'Load & Scan Vault'}
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                {demoLoading ? 'Loading Demo...' : 'Try with Demo Data'}
               </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 bg-slate-700/70 hover:bg-slate-700 text-slate-300 text-sm font-medium rounded-xl transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={!file || loading || demoLoading}
+                  onClick={handleUpload}
+                  className={`px-5 py-2 text-sm font-semibold rounded-xl transition shadow-lg ${
+                    !file || loading || demoLoading
+                      ? 'bg-slate-700 text-slate-500 cursor-not-allowed shadow-none'
+                      : 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/20'
+                  }`}
+                >
+                  {loading ? 'Analyzing Vault...' : 'Load & Scan Vault'}
+                </button>
+              </div>
             </div>
           </div>
         )}
