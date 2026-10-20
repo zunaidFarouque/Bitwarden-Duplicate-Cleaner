@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   KeyRound,
   Edit2,
@@ -39,6 +39,20 @@ export const AccountTable: React.FC<Props> = ({
   const [editValues, setEditValues] = useState<Partial<ItemSummary>>({});
   const [merging, setMerging] = useState(false);
   const [, setCopiedId] = useState<string | null>(null);
+
+  // Dynamic column detection: A column is only rendered if at least one duplicate row has data for it
+  const hasColumn = useMemo(() => {
+    return {
+      name: true, // Always show Name column
+      username: account.items.some((i) => i.username && i.username.trim() !== ''),
+      password: account.items.some((i) => i.password && i.password.trim() !== ''),
+      totp: account.items.some((i) => i.totp && i.totp.trim() !== ''),
+      passkeys: account.items.some((i) => i.passkeyCount > 0),
+      notes: account.items.some((i) => i.notes && i.notes.trim() !== ''),
+      folder: account.items.some((i) => i.folderName && i.folderName.trim() !== ''),
+      uris: account.items.some((i) => i.uris && i.uris.length > 0),
+    };
+  }, [account.items]);
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -152,13 +166,28 @@ export const AccountTable: React.FC<Props> = ({
           <thead className="bg-slate-900/60 text-slate-400 border-b border-slate-700/60 uppercase text-[10px] tracking-wider font-semibold">
             <tr>
               <th className="py-2.5 px-3 text-center w-14">Survivor</th>
-              <th className={`py-2.5 px-3 ${isDiff('name') ? 'text-amber-400' : ''}`}>Name</th>
-              <th className={`py-2.5 px-3 ${isDiff('username') ? 'text-amber-400' : ''}`}>Username</th>
-              <th className={`py-2.5 px-3 ${isDiff('password') ? 'text-amber-400' : ''}`}>Password</th>
-              <th className={`py-2.5 px-3 ${isDiff('totp') ? 'text-amber-400' : ''}`}>TOTP</th>
-              <th className={`py-2.5 px-3 ${isDiff('passkeys') ? 'text-amber-400' : ''}`}>Passkeys</th>
-              <th className={`py-2.5 px-3 ${isDiff('notes') ? 'text-amber-400' : ''}`}>Notes</th>
-              <th className="py-2.5 px-3">Folder</th>
+              {hasColumn.name && (
+                <th className={`py-2.5 px-3 ${isDiff('name') ? 'text-amber-400' : ''}`}>Name</th>
+              )}
+              {hasColumn.username && (
+                <th className={`py-2.5 px-3 ${isDiff('username') ? 'text-amber-400' : ''}`}>Username</th>
+              )}
+              {hasColumn.password && (
+                <th className={`py-2.5 px-3 ${isDiff('password') ? 'text-amber-400' : ''}`}>Password</th>
+              )}
+              {hasColumn.totp && (
+                <th className={`py-2.5 px-3 ${isDiff('totp') ? 'text-amber-400' : ''}`}>TOTP</th>
+              )}
+              {hasColumn.passkeys && (
+                <th className={`py-2.5 px-3 ${isDiff('passkeys') ? 'text-amber-400' : ''}`}>Passkeys</th>
+              )}
+              {hasColumn.notes && (
+                <th className={`py-2.5 px-3 ${isDiff('notes') ? 'text-amber-400' : ''}`}>Notes</th>
+              )}
+              {hasColumn.folder && <th className="py-2.5 px-3">Folder</th>}
+              {hasColumn.uris && (
+                <th className={`py-2.5 px-3 ${isDiff('uris') ? 'text-amber-400' : ''}`}>URIs</th>
+              )}
               <th className="py-2.5 px-3 text-right">Actions</th>
             </tr>
           </thead>
@@ -189,197 +218,221 @@ export const AccountTable: React.FC<Props> = ({
                   </td>
 
                   {/* Name Cell */}
-                  <td className="py-3 px-3 font-medium">
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editValues.name || ''}
-                        onChange={(e) =>
-                          setEditValues({ ...editValues, name: e.target.value })
-                        }
-                        className="w-full px-2 py-1 bg-slate-900 border border-slate-600 rounded text-xs text-white"
-                      />
-                    ) : (
-                      <div className="flex items-center gap-1.5 group/cell">
-                        <span className="truncate max-w-[140px]" title={item.name}>
-                          {item.name}
-                        </span>
-                        {isDiff('name') && (
-                          <button
-                            title="Push this name to all duplicates"
-                            onClick={() => onPushValue(domain, account.accountId, 'name', item.id)}
-                            className="opacity-0 group-hover/cell:opacity-100 p-1 hover:bg-slate-700 text-slate-400 hover:text-amber-300 rounded transition"
-                          >
-                            <ArrowRightLeft className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </td>
+                  {hasColumn.name && (
+                    <td className="py-3 px-3 font-medium">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editValues.name || ''}
+                          onChange={(e) =>
+                            setEditValues({ ...editValues, name: e.target.value })
+                          }
+                          className="w-full px-2 py-1 bg-slate-900 border border-slate-600 rounded text-xs text-white"
+                        />
+                      ) : (
+                        <div className="flex items-center gap-1.5 group/cell">
+                          <span className="truncate max-w-[140px]" title={item.name}>
+                            {item.name}
+                          </span>
+                          {isDiff('name') && (
+                            <button
+                              title="Push this name to all duplicates"
+                              onClick={() => onPushValue(domain, account.accountId, 'name', item.id)}
+                              className="opacity-0 group-hover/cell:opacity-100 p-1 hover:bg-slate-700 text-slate-400 hover:text-amber-300 rounded transition"
+                            >
+                              <ArrowRightLeft className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                  )}
 
                   {/* Username Cell */}
-                  <td className="py-3 px-3">
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editValues.username || ''}
-                        onChange={(e) =>
-                          setEditValues({ ...editValues, username: e.target.value })
-                        }
-                        className="w-full px-2 py-1 bg-slate-900 border border-slate-600 rounded text-xs text-white font-mono"
-                      />
-                    ) : (
-                      <div className="flex items-center gap-1.5 group/cell">
-                        <span
-                          className="font-mono text-slate-300 truncate max-w-[160px]"
-                          title={item.username || '(None)'}
-                        >
-                          {item.username || '(None)'}
-                        </span>
-                        {isDiff('username') && (
-                          <button
-                            title="Push this username to all duplicates"
-                            onClick={() =>
-                              onPushValue(domain, account.accountId, 'username', item.id)
-                            }
-                            className="opacity-0 group-hover/cell:opacity-100 p-1 hover:bg-slate-700 text-slate-400 hover:text-amber-300 rounded transition"
+                  {hasColumn.username && (
+                    <td className="py-3 px-3">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editValues.username || ''}
+                          onChange={(e) =>
+                            setEditValues({ ...editValues, username: e.target.value })
+                          }
+                          className="w-full px-2 py-1 bg-slate-900 border border-slate-600 rounded text-xs text-white font-mono"
+                        />
+                      ) : (
+                        <div className="flex items-center gap-1.5 group/cell">
+                          <span
+                            className="font-mono text-slate-300 truncate max-w-[160px]"
+                            title={item.username || '(None)'}
                           >
-                            <ArrowRightLeft className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </td>
+                            {item.username || '(None)'}
+                          </span>
+                          {isDiff('username') && (
+                            <button
+                              title="Push this username to all duplicates"
+                              onClick={() =>
+                                onPushValue(domain, account.accountId, 'username', item.id)
+                              }
+                              className="opacity-0 group-hover/cell:opacity-100 p-1 hover:bg-slate-700 text-slate-400 hover:text-amber-300 rounded transition"
+                            >
+                              <ArrowRightLeft className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                  )}
 
-                  {/* Password Cell (Plain Text & Visible for Direct Comparison) */}
-                  <td className="py-3 px-3">
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editValues.password || ''}
-                        onChange={(e) =>
-                          setEditValues({ ...editValues, password: e.target.value })
-                        }
-                        className="w-full px-2 py-1 bg-slate-900 border border-slate-600 rounded text-xs text-white font-mono"
-                      />
-                    ) : (
-                      <div className="flex items-center gap-1.5 group/cell">
-                        <span
-                          className="font-mono text-xs text-slate-200 truncate max-w-[150px] select-all"
-                          title={item.password || '(Empty)'}
-                        >
-                          {item.password || '(Empty)'}
-                        </span>
-                        {item.password && (
-                          <button
-                            onClick={() => copyToClipboard(item.password || '', item.id)}
-                            className="p-1 text-slate-400 hover:text-slate-200 transition"
-                            title="Copy password"
+                  {/* Password Cell */}
+                  {hasColumn.password && (
+                    <td className="py-3 px-3">
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editValues.password || ''}
+                          onChange={(e) =>
+                            setEditValues({ ...editValues, password: e.target.value })
+                          }
+                          className="w-full px-2 py-1 bg-slate-900 border border-slate-600 rounded text-xs text-white font-mono"
+                        />
+                      ) : (
+                        <div className="flex items-center gap-1.5 group/cell">
+                          <span
+                            className="font-mono text-xs text-slate-200 truncate max-w-[150px] select-all"
+                            title={item.password || '(Empty)'}
                           >
-                            <Copy className="w-3 h-3" />
-                          </button>
-                        )}
-                        {isDiff('password') && (
-                          <button
-                            title="Push this password to all duplicates"
-                            onClick={() =>
-                              onPushValue(domain, account.accountId, 'password', item.id)
-                            }
-                            className="opacity-0 group-hover/cell:opacity-100 p-1 hover:bg-slate-700 text-slate-400 hover:text-amber-300 rounded transition"
-                          >
-                            <ArrowRightLeft className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </td>
+                            {item.password || '(Empty)'}
+                          </span>
+                          {item.password && (
+                            <button
+                              onClick={() => copyToClipboard(item.password || '', item.id)}
+                              className="p-1 text-slate-400 hover:text-slate-200 transition"
+                              title="Copy password"
+                            >
+                              <Copy className="w-3 h-3" />
+                            </button>
+                          )}
+                          {isDiff('password') && (
+                            <button
+                              title="Push this password to all duplicates"
+                              onClick={() =>
+                                onPushValue(domain, account.accountId, 'password', item.id)
+                              }
+                              className="opacity-0 group-hover/cell:opacity-100 p-1 hover:bg-slate-700 text-slate-400 hover:text-amber-300 rounded transition"
+                            >
+                              <ArrowRightLeft className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                  )}
 
                   {/* TOTP Cell */}
-                  <td className="py-3 px-3">
-                    {item.totp ? (
-                      <span
-                        className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono font-medium"
-                        title={item.totp}
-                      >
-                        Configured
-                      </span>
-                    ) : (
-                      <span className="text-slate-500 text-[11px]" title="No TOTP configured">
-                        —
-                      </span>
-                    )}
-                  </td>
+                  {hasColumn.totp && (
+                    <td className="py-3 px-3">
+                      {item.totp ? (
+                        <span
+                          className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono font-medium"
+                          title={item.totp}
+                        >
+                          Configured
+                        </span>
+                      ) : (
+                        <span className="text-slate-500 text-[11px]" title="No TOTP configured">
+                          —
+                        </span>
+                      )}
+                    </td>
+                  )}
 
                   {/* Passkeys Cell */}
-                  <td className="py-3 px-3">
-                    {item.passkeyCount > 0 ? (
-                      <div
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/30 font-semibold"
-                        title={
-                          item.passkeyDetails.length > 0
-                            ? item.passkeyDetails
-                                .map((p) => `${p.rpId || 'Passkey'} (${p.userName || ''})`)
-                                .join(', ')
-                            : `${item.passkeyCount} Passkey(s)`
-                        }
-                      >
-                        <KeyRound className="w-3 h-3 text-amber-400" />
-                        <span>{item.passkeyCount} Passkey</span>
-                      </div>
-                    ) : (
-                      <span className="text-slate-500 text-[11px]" title="No passkeys">
-                        —
-                      </span>
-                    )}
-                  </td>
+                  {hasColumn.passkeys && (
+                    <td className="py-3 px-3">
+                      {item.passkeyCount > 0 ? (
+                        <div
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/30 font-semibold"
+                          title={
+                            item.passkeyDetails.length > 0
+                              ? item.passkeyDetails
+                                  .map((p) => `${p.rpId || 'Passkey'} (${p.userName || ''})`)
+                                  .join(', ')
+                              : `${item.passkeyCount} Passkey(s)`
+                          }
+                        >
+                          <KeyRound className="w-3 h-3 text-amber-400" />
+                          <span>{item.passkeyCount} Passkey</span>
+                        </div>
+                      ) : (
+                        <span className="text-slate-500 text-[11px]" title="No passkeys">
+                          —
+                        </span>
+                      )}
+                    </td>
+                  )}
 
                   {/* Notes Cell */}
-                  <td className="py-3 px-3">
-                    {isEditing ? (
-                      <textarea
-                        rows={2}
-                        value={editValues.notes || ''}
-                        onChange={(e) =>
-                          setEditValues({ ...editValues, notes: e.target.value })
-                        }
-                        className="w-full px-2 py-1 bg-slate-900 border border-slate-600 rounded text-xs text-white"
-                      />
-                    ) : (
-                      <div className="flex items-center gap-1.5 group/cell">
-                        {item.notes ? (
-                          <span
-                            className="truncate max-w-[120px] text-slate-400 text-[11px]"
-                            title={item.notes}
-                          >
-                            {item.notes}
-                          </span>
-                        ) : (
-                          <span className="text-slate-500 text-[11px]" title="No notes">
-                            —
-                          </span>
-                        )}
-                        {isDiff('notes') && item.notes && (
-                          <button
-                            title="Push these notes to all duplicates"
-                            onClick={() =>
-                              onPushValue(domain, account.accountId, 'notes', item.id)
-                            }
-                            className="opacity-0 group-hover/cell:opacity-100 p-1 hover:bg-slate-700 text-slate-400 hover:text-amber-300 rounded transition"
-                          >
-                            <ArrowRightLeft className="w-3 h-3" />
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </td>
+                  {hasColumn.notes && (
+                    <td className="py-3 px-3">
+                      {isEditing ? (
+                        <textarea
+                          rows={2}
+                          value={editValues.notes || ''}
+                          onChange={(e) =>
+                            setEditValues({ ...editValues, notes: e.target.value })
+                          }
+                          className="w-full px-2 py-1 bg-slate-900 border border-slate-600 rounded text-xs text-white"
+                        />
+                      ) : (
+                        <div className="flex items-center gap-1.5 group/cell">
+                          {item.notes ? (
+                            <span
+                              className="truncate max-w-[120px] text-slate-400 text-[11px]"
+                              title={item.notes}
+                            >
+                              {item.notes}
+                            </span>
+                          ) : (
+                            <span className="text-slate-500 text-[11px]" title="No notes">
+                              —
+                            </span>
+                          )}
+                          {isDiff('notes') && item.notes && (
+                            <button
+                              title="Push these notes to all duplicates"
+                              onClick={() =>
+                                onPushValue(domain, account.accountId, 'notes', item.id)
+                              }
+                              className="opacity-0 group-hover/cell:opacity-100 p-1 hover:bg-slate-700 text-slate-400 hover:text-amber-300 rounded transition"
+                            >
+                              <ArrowRightLeft className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </td>
+                  )}
 
                   {/* Folder Cell */}
-                  <td
-                    className="py-3 px-3 text-slate-400 text-[11px] truncate max-w-[100px]"
-                    title={item.folderName || '(None)'}
-                  >
-                    {item.folderName || '(None)'}
-                  </td>
+                  {hasColumn.folder && (
+                    <td
+                      className="py-3 px-3 text-slate-400 text-[11px] truncate max-w-[100px]"
+                      title={item.folderName || '(None)'}
+                    >
+                      {item.folderName || '(None)'}
+                    </td>
+                  )}
+
+                  {/* URIs Cell */}
+                  {hasColumn.uris && (
+                    <td
+                      className="py-3 px-3 text-slate-400 text-[11px] truncate max-w-[140px]"
+                      title={item.uris.join(', ') || 'No URIs'}
+                    >
+                      {item.uris.join(', ') || '—'}
+                    </td>
+                  )}
 
                   {/* Actions Cell */}
                   <td className="py-3 px-3 text-right">
@@ -434,7 +487,7 @@ export const AccountTable: React.FC<Props> = ({
           <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>
             Survivor keeps all passkeys, archives differing passwords to{' '}
-            <code className="text-slate-300">passwordHistory</code>, and moves redundant rows to Trash.
+            <code className="text-slate-300">passwordHistory</code>, appends URIs, and moves redundant rows to Trash.
           </span>
         </div>
 

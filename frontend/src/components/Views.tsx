@@ -97,31 +97,22 @@ export const UniqueView: React.FC<UniqueViewProps> = ({ items }) => {
     };
   }, [items]);
 
-  // User-toggleable column visibility, defaulting to true if any row has it
-  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({
-    name: true,
-    username: true,
-    password: true,
-    totp: true,
-    passkeys: true,
-    notes: true,
-    folder: true,
-    uris: true,
-  });
+  // User-toggleable column visibility overrides
+  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
 
   const toggleColumn = (col: string) => {
     setColumnVisibility((prev) => ({
       ...prev,
-      [col]: !prev[col],
+      [col]: prev[col] !== undefined ? !prev[col] : !((hasColumnData as any)[col] ?? false),
     }));
   };
 
-  // An active column is displayed if user wants it and it has data (or user explicitly checked it)
+  // An active column is displayed if any row has it, unless user explicitly toggled it
   const isColVisible = (col: string) => {
     if (columnVisibility[col] !== undefined) {
       return columnVisibility[col];
     }
-    return (hasColumnData as any)[col] ?? true;
+    return (hasColumnData as any)[col] ?? false;
   };
 
   const copyToClipboard = (text: string, id: string) => {
