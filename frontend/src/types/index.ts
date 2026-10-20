@@ -2,6 +2,7 @@ export interface PasskeyDetail {
   credentialId?: string;
   rpId?: string;
   userName?: string;
+  userHandle?: string;
   creationDate?: string;
   keyType?: string;
 }

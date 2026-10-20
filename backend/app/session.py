@@ -20,11 +20,13 @@ class SessionSnapshot:
         active_items: Dict[str, BitwardenItem],
         deleted_items: Dict[str, BitwardenItem],
         modified_ids: Set[str],
+        domain_overrides: Optional[Dict[str, str]] = None,
         description: str = "",
     ):
         self.active_items = {k: v.model_copy(deep=True) for k, v in active_items.items()}
         self.deleted_items = {k: v.model_copy(deep=True) for k, v in deleted_items.items()}
         self.modified_ids = set(modified_ids)
+        self.domain_overrides = dict(domain_overrides or {})
         self.description = description
 
 
@@ -36,6 +38,7 @@ class VaultSession:
         self.active_items: Dict[str, BitwardenItem] = {}
         self.deleted_items: Dict[str, BitwardenItem] = {}
         self.modified_ids: Set[str] = set()
+        self.domain_overrides: Dict[str, str] = {}
         self.user_claimed_passkeys: bool = False
         self.backup_path: Optional[str] = None
         self.warning_message: Optional[str] = None
@@ -56,6 +59,7 @@ class VaultSession:
         self.active_items = {item.id: item.model_copy(deep=True) for item in vault.items}
         self.deleted_items = {}
         self.modified_ids = set()
+        self.domain_overrides = {}
         self.user_claimed_passkeys = user_claimed_passkeys
         self.backup_path = backup_path
         self.undo_stack.clear()
@@ -79,6 +83,7 @@ class VaultSession:
             self.active_items,
             self.deleted_items,
             self.modified_ids,
+            domain_overrides=self.domain_overrides,
             description=description,
         )
         self.undo_stack.append(snapshot)
@@ -95,6 +100,7 @@ class VaultSession:
             self.active_items,
             self.deleted_items,
             self.modified_ids,
+            domain_overrides=self.domain_overrides,
             description="redo point",
         )
         self.redo_stack.append(current)
@@ -104,6 +110,7 @@ class VaultSession:
         self.active_items = {k: v.model_copy(deep=True) for k, v in prev.active_items.items()}
         self.deleted_items = {k: v.model_copy(deep=True) for k, v in prev.deleted_items.items()}
         self.modified_ids = set(prev.modified_ids)
+        self.domain_overrides = dict(prev.domain_overrides)
         return True
 
     def redo(self) -> bool:
@@ -114,6 +121,7 @@ class VaultSession:
             self.active_items,
             self.deleted_items,
             self.modified_ids,
+            domain_overrides=self.domain_overrides,
             description="undo point",
         )
         self.undo_stack.append(current)
@@ -123,11 +131,48 @@ class VaultSession:
         self.active_items = {k: v.model_copy(deep=True) for k, v in next_snap.active_items.items()}
         self.deleted_items = {k: v.model_copy(deep=True) for k, v in next_snap.deleted_items.items()}
         self.modified_ids = set(next_snap.modified_ids)
+        self.domain_overrides = dict(next_snap.domain_overrides)
         return True
 
     def get_analysis(self):
         items_list = list(self.active_items.values())
-        return analyze_vault(items_list, self.folders)
+        return analyze_vault(items_list, self.folders, self.domain_overrides)
+
+    def set_item_domain(self, item_id: str, new_domain: str) -> bool:
+        if item_id not in self.active_items:
+            return False
+        clean_domain = new_domain.strip().lower()
+        if not clean_domain:
+            return False
+        item = self.active_items[item_id]
+        self._save_snapshot(f"Move item {item.name} to {clean_domain}")
+        self.domain_overrides[item_id] = clean_domain
+        self.modified_ids.add(item_id)
+        return True
+
+    def separate_item_as_unique(self, item_id: str) -> bool:
+        if item_id not in self.active_items:
+            return False
+        item = self.active_items[item_id]
+        clean_name = (item.name or "Item").strip()
+        unique_domain = f"{clean_name} (Separate)"
+        self._save_snapshot(f"Separate item {item.name} as unique")
+        self.domain_overrides[item_id] = unique_domain
+        self.modified_ids.add(item_id)
+        return True
+
+    def move_items_domain(self, item_ids: List[str], new_domain: str) -> bool:
+        clean_domain = new_domain.strip().lower()
+        if not clean_domain:
+            return False
+        valid_ids = [iid for iid in item_ids if iid in self.active_items]
+        if not valid_ids:
+            return False
+        self._save_snapshot(f"Move {len(valid_ids)} items to {clean_domain}")
+        for iid in valid_ids:
+            self.domain_overrides[iid] = clean_domain
+            self.modified_ids.add(iid)
+        return True
 
     def get_stats(self) -> VaultStats:
         duplicate_domains, unique_items, _ = self.get_analysis()

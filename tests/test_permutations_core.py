@@ -107,15 +107,22 @@ class TestDomainNormalizationCombinations(unittest.TestCase):
     def test_app_uris(self):
         """Test Android and iOS app URI schemes."""
         cases = [
+            ("androidapp://com.instagram.android", "instagram.com"),
+            ("androidapp://org.coursera.android", "coursera.org"),
+            ("androidapp://org.brilliant.android", "brilliant.org"),
+            ("androidapp://com.linkedin.android", "linkedin.com"),
             ("androidapp://com.google.android.youtube", "google.com"),
             ("androidapp://com.google.android.apps.docs", "google.com"),
             ("androidapp://com.google.android.gm", "google.com"),
-            ("androidapp://com.amazon.mShop.android.shopping", "shopping.com"),
-            ("androidapp://org.mozilla.firefox", "firefox.com"),
-            ("androidapp://com.spotify.music", "music.com"),
-            ("androidapp://com.reddit.frontpage", "frontpage.com"),
+            ("androidapp://com.amazon.mShop.android.shopping", "amazon.com"),
+            ("androidapp://org.mozilla.firefox", "mozilla.org"),
+            ("androidapp://com.spotify.music", "spotify.com"),
+            ("androidapp://com.reddit.frontpage", "reddit.com"),
             ("androidapp://singlepackage", "singlepackage"),
             ("androidapp://com.google.android.keep/some/path", "google.com"),
+            ("https://android.brilliant.org", "brilliant.org"),
+            ("https://android.coursera.org", "coursera.org"),
+            ("https://android.instagram.com", "instagram.com"),
         ]
         for uri, expected in cases:
             with self.subTest(uri=uri):

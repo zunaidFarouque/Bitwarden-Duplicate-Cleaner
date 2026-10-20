@@ -21,6 +21,9 @@ interface DomainViewProps {
   onEditCell: (itemId: string, field: string, value: any) => Promise<void>;
   onPushValue: (domain: string, accountId: string, field: string, sourceItemId: string) => Promise<void>;
   onDeleteItem: (itemId: string) => Promise<void>;
+  onSeparateItem: (itemId: string) => Promise<void>;
+  onSetItemDomain: (itemId: string, domain: string) => Promise<void>;
+  onMoveItemsDomain: (itemIds: string[], domain: string) => Promise<void>;
 }
 
 export const DomainView: React.FC<DomainViewProps> = ({
@@ -29,6 +32,9 @@ export const DomainView: React.FC<DomainViewProps> = ({
   onEditCell,
   onPushValue,
   onDeleteItem,
+  onSeparateItem,
+  onSetItemDomain,
+  onMoveItemsDomain,
 }) => {
   return (
     <div className="space-y-6">
@@ -66,6 +72,9 @@ export const DomainView: React.FC<DomainViewProps> = ({
             onEditCell={onEditCell}
             onPushValue={onPushValue}
             onDeleteItem={onDeleteItem}
+            onSeparateItem={onSeparateItem}
+            onSetItemDomain={onSetItemDomain}
+            onMoveItemsDomain={onMoveItemsDomain}
           />
         ))}
       </div>

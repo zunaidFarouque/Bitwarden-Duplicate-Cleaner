@@ -154,3 +154,13 @@ class PushValueRequest(BaseModel):
     accountId: str
     field: str
     sourceItemId: str
+
+
+class SetDomainRequest(BaseModel):
+    domain: str
+
+
+class MoveItemsDomainRequest(BaseModel):
+    itemIds: List[str]
+    domain: str
+

@@ -117,6 +117,34 @@ export const api = {
     return res.json();
   },
 
+  async separateItem(itemId: string): Promise<{ success: boolean; stats: VaultStats }> {
+    const res = await fetch(`${BASE_URL}/item/${encodeURIComponent(itemId)}/separate`, {
+      method: 'POST',
+    });
+    if (!res.ok) throw new Error('Failed to separate item');
+    return res.json();
+  },
+
+  async setItemDomain(itemId: string, domain: string): Promise<{ success: boolean; stats: VaultStats }> {
+    const res = await fetch(`${BASE_URL}/item/${encodeURIComponent(itemId)}/set_domain`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ domain }),
+    });
+    if (!res.ok) throw new Error('Failed to set domain');
+    return res.json();
+  },
+
+  async moveItemsDomain(itemIds: string[], domain: string): Promise<{ success: boolean; stats: VaultStats }> {
+    const res = await fetch(`${BASE_URL}/items/move_domain`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itemIds, domain }),
+    });
+    if (!res.ok) throw new Error('Failed to move items');
+    return res.json();
+  },
+
   async undo(): Promise<{ success: boolean; stats: VaultStats }> {
     const res = await fetch(`${BASE_URL}/undo`, { method: 'POST' });
     if (!res.ok) throw new Error('Failed to undo');

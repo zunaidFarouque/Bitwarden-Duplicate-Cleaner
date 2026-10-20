@@ -111,7 +111,8 @@ def compute_group_diffs(items: List[BitwardenItem]) -> Tuple[List[str], List[Dic
 
 def analyze_vault(
     items: List[BitwardenItem],
-    folders: List[BitwardenFolder]
+    folders: List[BitwardenFolder],
+    domain_overrides: Optional[Dict[str, str]] = None,
 ) -> Tuple[Dict[str, DomainGroup], List[ItemSummary], List[DomainSummary]]:
     """
     Groups items by domain and normalized account.
@@ -126,9 +127,12 @@ def analyze_vault(
     grouped: Dict[str, Dict[str, List[BitwardenItem]]] = defaultdict(lambda: defaultdict(list))
 
     for item in items:
-        # Determine domain
-        item_uris = [u.uri for u in item.login.uris if u.uri] if (item.login and item.login.uris) else []
-        domain = get_item_primary_domain(item_uris, item.name)
+        # Determine domain (check user manual override first)
+        if domain_overrides and item.id in domain_overrides:
+            domain = domain_overrides[item.id]
+        else:
+            item_uris = [u.uri for u in item.login.uris if u.uri] if (item.login and item.login.uris) else []
+            domain = get_item_primary_domain(item_uris, item.name)
 
         # Determine normalized username
         raw_user = item.login.username if item.login else None

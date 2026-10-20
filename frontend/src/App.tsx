@@ -155,6 +155,21 @@ export const App: React.FC = () => {
     await refreshAll();
   };
 
+  const handleSeparateItem = async (itemId: string) => {
+    await api.separateItem(itemId);
+    await refreshAll();
+  };
+
+  const handleSetItemDomain = async (itemId: string, domain: string) => {
+    await api.setItemDomain(itemId, domain);
+    await refreshAll();
+  };
+
+  const handleMoveItemsDomain = async (itemIds: string[], domain: string) => {
+    await api.moveItemsDomain(itemIds, domain);
+    await refreshAll();
+  };
+
   const handleRestoreItem = async (itemId: string) => {
     await api.restoreItem(itemId);
     await refreshAll();
@@ -264,6 +279,9 @@ export const App: React.FC = () => {
                   onEditCell={handleEditCell}
                   onPushValue={handlePushValue}
                   onDeleteItem={handleDeleteItem}
+                  onSeparateItem={handleSeparateItem}
+                  onSetItemDomain={handleSetItemDomain}
+                  onMoveItemsDomain={handleMoveItemsDomain}
                 />
               )}
               {activeView.type === 'unique' && <UniqueView items={uniqueList} />}

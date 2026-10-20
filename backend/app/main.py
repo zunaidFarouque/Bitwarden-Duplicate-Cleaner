@@ -11,6 +11,8 @@ from backend.app.models import (
     MergeRequest,
     EditCellRequest,
     PushValueRequest,
+    SetDomainRequest,
+    MoveItemsDomainRequest,
     DomainGroup,
 )
 from backend.app.parser import parse_and_validate_vault, create_vault_backup
@@ -180,6 +182,31 @@ async def push_value(req: PushValueRequest):
     if not success:
         raise HTTPException(status_code=400, detail="Failed to push column value")
     return {"success": True}
+
+
+@app.post("/api/item/{item_id}/separate")
+async def separate_item(item_id: str):
+    success = session.separate_item_as_unique(item_id)
+    if not success:
+        raise HTTPException(status_code=400, detail="Item not found")
+    return {"success": True, "stats": session.get_stats()}
+
+
+@app.post("/api/item/{item_id}/set_domain")
+async def set_item_domain(item_id: str, req: SetDomainRequest):
+    success = session.set_item_domain(item_id, req.domain)
+    if not success:
+        raise HTTPException(status_code=400, detail="Failed to set domain")
+    return {"success": True, "stats": session.get_stats()}
+
+
+@app.post("/api/items/move_domain")
+async def move_items_domain(req: MoveItemsDomainRequest):
+    success = session.move_items_domain(req.itemIds, req.domain)
+    if not success:
+        raise HTTPException(status_code=400, detail="Failed to move items")
+    return {"success": True, "stats": session.get_stats()}
+
 
 
 @app.post("/api/delete/{item_id}")

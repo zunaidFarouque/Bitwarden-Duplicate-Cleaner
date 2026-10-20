@@ -33,12 +33,22 @@ def extract_domain_from_uri(uri_str: Optional[str]) -> Optional[str]:
 
     # Handle android/iOS app URIs
     if uri_str.startswith("androidapp://"):
-        pkg = uri_str.replace("androidapp://", "").split("/")[0]
-        # Common packages
-        if "google" in pkg:
-            return "google.com"
+        pkg = uri_str.replace("androidapp://", "").split("/")[0].strip().lower()
         parts = pkg.split(".")
         if len(parts) >= 2:
+            KNOWN_APP_TLDS = {
+                "com", "org", "net", "edu", "gov", "io", "co", "app", "dev",
+                "tv", "me", "ai", "uk", "de", "fr", "jp", "in", "br", "ca", "au"
+            }
+            # Reverse domain notation: e.g. com.instagram.android or org.coursera.android
+            if parts[0] in KNOWN_APP_TLDS:
+                brand = parts[1]
+                tld = parts[0]
+                return f"{brand}.{tld}"
+            # e.g. android.instagram.com or instagram.com
+            clean_parts = [p for p in parts if p not in ("android", "app", "mobile", "lite")]
+            if len(clean_parts) >= 2:
+                return f"{clean_parts[-2]}.{clean_parts[-1]}"
             return f"{parts[-1]}.com"
         return pkg
 

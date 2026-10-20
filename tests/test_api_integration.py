@@ -265,6 +265,59 @@ class TestIntegration(unittest.TestCase):
         router = next(u for u in unique_items if u["name"] == "Wi-Fi Router Admin")
         self.assertEqual(len(router["uris"]), 0)
 
+    def test_separate_and_regroup_items(self):
+        # 1. Load demo vault
+        resp = self.client.post("/api/load-demo")
+        self.assertEqual(resp.status_code, 200)
+
+        # 2. Get GitHub duplicate items
+        gh_resp = self.client.get("/api/duplicates/github.com")
+        self.assertEqual(gh_resp.status_code, 200)
+        gh_data = gh_resp.json()
+        gh_items = gh_data["accounts"][0]["items"]
+        self.assertEqual(len(gh_items), 2)
+        gh_item_id = gh_items[0]["id"]
+
+        # 3. Separate first GitHub item as unique
+        sep_resp = self.client.post(f"/api/item/{gh_item_id}/separate")
+        self.assertEqual(sep_resp.status_code, 200)
+
+        # Check duplicates for github.com: should now have 0 duplicates (the remaining item is now unique)
+        sidebar_resp = self.client.get("/api/sidebar")
+        domains = [d["domain"] for d in sidebar_resp.json()["domains"]]
+        self.assertNotIn("github.com", domains)
+
+        # Verify that both items are now in unique items
+        unique_resp = self.client.get("/api/unique")
+        unique_ids = [u["id"] for u in unique_resp.json()["items"]]
+        self.assertIn(gh_item_id, unique_ids)
+
+        # 4. Test move_items_domain to regroup them into a custom domain: "git-custom.com"
+        other_gh_id = gh_items[1]["id"]
+        move_resp = self.client.post(
+            "/api/items/move_domain",
+            json={"itemIds": [gh_item_id, other_gh_id], "domain": "git-custom.com"}
+        )
+        self.assertEqual(move_resp.status_code, 200)
+
+        # Check duplicates for git-custom.com
+        custom_resp = self.client.get("/api/duplicates/git-custom.com")
+        self.assertEqual(custom_resp.status_code, 200)
+        custom_group = custom_resp.json()
+        self.assertEqual(custom_group["totalItems"], 2)
+
+        # 5. Test undo: reverting the move
+        undo_resp = self.client.post("/api/undo")
+        self.assertEqual(undo_resp.status_code, 200)
+        custom_resp2 = self.client.get("/api/duplicates/git-custom.com")
+        self.assertEqual(custom_resp2.json()["totalItems"], 0)
+
+        # Undo again: reverting the separation -> github.com duplicates restored!
+        undo_resp2 = self.client.post("/api/undo")
+        self.assertEqual(undo_resp2.status_code, 200)
+        gh_restored = self.client.get("/api/duplicates/github.com").json()
+        self.assertEqual(gh_restored["totalItems"], 2)
+
 
 if __name__ == "__main__":
     unittest.main()
