@@ -75,9 +75,8 @@ def merge_into_survivor(
 
     merged_survivor.login.passwordHistory = pw_history
 
-    # 3. Consolidate URIs
-    existing_uris = merged_survivor.login.uris or []
-    seen_uri_strings = {u.uri.strip().lower() for u in existing_uris if u.uri}
+    # 3. Consolidate URIs: Append all valid URIs from duplicates
+    existing_uris = list(merged_survivor.login.uris or [])
     final_uris = list(existing_uris)
 
     for dup in duplicates:
@@ -85,8 +84,7 @@ def merge_into_survivor(
             continue
         if dup.login and dup.login.uris:
             for u in dup.login.uris:
-                if u.uri and u.uri.strip().lower() not in seen_uri_strings:
-                    seen_uri_strings.add(u.uri.strip().lower())
+                if u.uri and u.uri.strip():
                     final_uris.append(u.model_copy(deep=True))
 
     merged_survivor.login.uris = final_uris

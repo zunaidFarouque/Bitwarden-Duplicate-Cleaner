@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import {
   KeyRound,
-  Eye,
-  EyeOff,
   Edit2,
   Check,
   X,
@@ -39,13 +37,8 @@ export const AccountTable: React.FC<Props> = ({
 
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Partial<ItemSummary>>({});
-  const [showPasswordMap, setShowPasswordMap] = useState<Record<string, boolean>>({});
   const [merging, setMerging] = useState(false);
   const [, setCopiedId] = useState<string | null>(null);
-
-  const togglePassword = (id: string) => {
-    setShowPasswordMap((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -146,7 +139,7 @@ export const AccountTable: React.FC<Props> = ({
                 key={f}
                 className="text-[10px] px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 font-semibold"
               >
-                {f} differs
+                {f}
               </span>
             ))
           )}
@@ -173,7 +166,6 @@ export const AccountTable: React.FC<Props> = ({
             {account.items.map((item) => {
               const isSurvivor = survivorId === item.id;
               const isEditing = editingRowId === item.id;
-              const showPassword = !!showPasswordMap[item.id];
 
               return (
                 <tr
@@ -209,7 +201,9 @@ export const AccountTable: React.FC<Props> = ({
                       />
                     ) : (
                       <div className="flex items-center gap-1.5 group/cell">
-                        <span className="truncate max-w-[140px]">{item.name}</span>
+                        <span className="truncate max-w-[140px]" title={item.name}>
+                          {item.name}
+                        </span>
                         {isDiff('name') && (
                           <button
                             title="Push this name to all duplicates"
@@ -236,7 +230,10 @@ export const AccountTable: React.FC<Props> = ({
                       />
                     ) : (
                       <div className="flex items-center gap-1.5 group/cell">
-                        <span className="font-mono text-slate-300 truncate max-w-[160px]">
+                        <span
+                          className="font-mono text-slate-300 truncate max-w-[160px]"
+                          title={item.username || '(None)'}
+                        >
                           {item.username || '(None)'}
                         </span>
                         {isDiff('username') && (
@@ -254,7 +251,7 @@ export const AccountTable: React.FC<Props> = ({
                     )}
                   </td>
 
-                  {/* Password Cell */}
+                  {/* Password Cell (Plain Text & Visible for Direct Comparison) */}
                   <td className="py-3 px-3">
                     {isEditing ? (
                       <input
@@ -267,26 +264,20 @@ export const AccountTable: React.FC<Props> = ({
                       />
                     ) : (
                       <div className="flex items-center gap-1.5 group/cell">
-                        <span className="font-mono text-xs">
-                          {item.password ? (showPassword ? item.password : '••••••••••••') : '(Empty)'}
+                        <span
+                          className="font-mono text-xs text-slate-200 truncate max-w-[150px] select-all"
+                          title={item.password || '(Empty)'}
+                        >
+                          {item.password || '(Empty)'}
                         </span>
                         {item.password && (
-                          <>
-                            <button
-                              onClick={() => togglePassword(item.id)}
-                              className="p-1 text-slate-400 hover:text-slate-200 transition"
-                              title={showPassword ? 'Hide password' : 'Show password'}
-                            >
-                              {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                            </button>
-                            <button
-                              onClick={() => copyToClipboard(item.password || '', item.id)}
-                              className="p-1 text-slate-400 hover:text-slate-200 transition"
-                              title="Copy password"
-                            >
-                              <Copy className="w-3 h-3" />
-                            </button>
-                          </>
+                          <button
+                            onClick={() => copyToClipboard(item.password || '', item.id)}
+                            className="p-1 text-slate-400 hover:text-slate-200 transition"
+                            title="Copy password"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </button>
                         )}
                         {isDiff('password') && (
                           <button
@@ -306,23 +297,39 @@ export const AccountTable: React.FC<Props> = ({
                   {/* TOTP Cell */}
                   <td className="py-3 px-3">
                     {item.totp ? (
-                      <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono font-medium">
+                      <span
+                        className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-mono font-medium"
+                        title={item.totp}
+                      >
                         Configured
                       </span>
                     ) : (
-                      <span className="text-slate-500 text-[11px]">—</span>
+                      <span className="text-slate-500 text-[11px]" title="No TOTP configured">
+                        —
+                      </span>
                     )}
                   </td>
 
                   {/* Passkeys Cell */}
                   <td className="py-3 px-3">
                     {item.passkeyCount > 0 ? (
-                      <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/30 font-semibold">
+                      <div
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/30 font-semibold"
+                        title={
+                          item.passkeyDetails.length > 0
+                            ? item.passkeyDetails
+                                .map((p) => `${p.rpId || 'Passkey'} (${p.userName || ''})`)
+                                .join(', ')
+                            : `${item.passkeyCount} Passkey(s)`
+                        }
+                      >
                         <KeyRound className="w-3 h-3 text-amber-400" />
                         <span>{item.passkeyCount} Passkey</span>
                       </div>
                     ) : (
-                      <span className="text-slate-500 text-[11px]">—</span>
+                      <span className="text-slate-500 text-[11px]" title="No passkeys">
+                        —
+                      </span>
                     )}
                   </td>
 
@@ -347,7 +354,9 @@ export const AccountTable: React.FC<Props> = ({
                             {item.notes}
                           </span>
                         ) : (
-                          <span className="text-slate-500 text-[11px]">—</span>
+                          <span className="text-slate-500 text-[11px]" title="No notes">
+                            —
+                          </span>
                         )}
                         {isDiff('notes') && item.notes && (
                           <button
@@ -365,7 +374,10 @@ export const AccountTable: React.FC<Props> = ({
                   </td>
 
                   {/* Folder Cell */}
-                  <td className="py-3 px-3 text-slate-400 text-[11px]">
+                  <td
+                    className="py-3 px-3 text-slate-400 text-[11px] truncate max-w-[100px]"
+                    title={item.folderName || '(None)'}
+                  >
                     {item.folderName || '(None)'}
                   </td>
 

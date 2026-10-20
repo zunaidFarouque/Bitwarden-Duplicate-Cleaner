@@ -592,26 +592,31 @@ class TestConsolidatorPermutations(unittest.TestCase):
 
     # ------------------ Multiple URI Unions ------------------
 
-    def test_uri_unions_deduplication(self):
-        """Test multiple URI unions avoiding case-insensitive and slash duplicates."""
+    def test_uri_append_consolidation(self):
+        """Test that duplicate item URIs are appended to survivor URIs."""
         survivor = self._create_item("s1", uris=["https://example.com/login"])
         dup1 = self._create_item("d1", uris=[
-            "https://example.com/login",      # Exact duplicate
-            "HTTPS://EXAMPLE.COM/LOGIN",      # Case duplicate
-            "https://sub.example.com",        # Distinct
+            "https://sub.example.com",
+            "https://app.example.com",
         ])
         dup2 = self._create_item("d2", uris=[
-            "https://api.example.com",        # Distinct
-            "",                               # Empty URI
-            "https://sub.example.com",        # Duplicate of dup1
+            "https://api.example.com",
+            "",
+            "https://sub.example.com",
         ])
 
         merged = merge_into_survivor(survivor, [survivor, dup1, dup2])
         merged_uris = [u.uri for u in merged.login.uris]
-        self.assertEqual(len(merged_uris), 3)
+        self.assertEqual(len(merged_uris), 5)
         self.assertEqual(
             merged_uris,
-            ["https://example.com/login", "https://sub.example.com", "https://api.example.com"],
+            [
+                "https://example.com/login",
+                "https://sub.example.com",
+                "https://app.example.com",
+                "https://api.example.com",
+                "https://sub.example.com",
+            ],
         )
 
     # ------------------ TOTP Consolidation ------------------

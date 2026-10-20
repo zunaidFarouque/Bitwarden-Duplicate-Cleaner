@@ -29,11 +29,8 @@ export const Navbar: React.FC<Props> = ({
           <ShieldCheck className="w-5 h-5" />
         </div>
         <div>
-          <h1 className="font-bold text-slate-100 text-sm tracking-tight flex items-center gap-2">
+          <h1 className="font-bold text-slate-100 text-sm tracking-tight">
             Bitwarden Duplicate Cleaner
-            <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-              Offline Local
-            </span>
           </h1>
           <p className="text-[11px] text-slate-400">Zero Internet • Privacy First • Passkey Safe</p>
         </div>
