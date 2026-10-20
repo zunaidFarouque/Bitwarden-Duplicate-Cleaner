@@ -1,60 +1,83 @@
 @echo off
+setlocal
+cd /d "%~dp0"
 title Bitwarden Duplicate Cleaner
+
 echo =========================================================
 echo      Bitwarden Duplicate Cleaner - 1-Click Launcher
 echo =========================================================
 echo.
 
-where python >nul 2>&1
-if %errorlevel% neq 0 (
-    where py >nul 2>&1
-    if %errorlevel% neq 0 (
-        echo [ERROR] Python is not installed or not found in your PATH.
-        echo.
-        echo Please download and install Python (3.9 or higher):
-        echo   https://www.python.org/downloads/
-        echo.
-        echo IMPORTANT: During Python installation on Windows, check the box:
-        echo   [x] "Add python.exe to PATH"
-        echo.
-        pause
-        exit /b 1
-    ) else (
-        set PYCMD=py
-    )
-) else (
-    set PYCMD=python
+REM 1. Find a working Python executable (check 'python', then 'py')
+set "PYCMD="
+
+python -c "import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)" >nul 2>&1
+if not errorlevel 1 (
+    set "PYCMD=python"
+    goto :PYTHON_FOUND
 )
 
-REM 1. Create virtual environment if it does not exist
-if not exist ".venv\Scripts\activate.bat" (
-    echo [*] Creating isolated virtual environment in .venv...
-    %PYCMD% -m venv .venv
-    if %errorlevel% neq 0 (
-        echo [ERROR] Failed to create virtual environment.
-        pause
-        exit /b 1
-    )
-    echo [+] Virtual environment created.
-    echo [*] Installing dependencies inside .venv...
-    call .venv\Scripts\activate.bat
-    python -m pip install --upgrade pip >nul 2>&1
-    python -m pip install -r backend\requirements.txt
-    if %errorlevel% neq 0 (
-        echo [ERROR] Failed to install dependencies into .venv.
-        pause
-        exit /b 1
-    )
-    echo [+] Dependencies installed successfully.
-) else (
-    call .venv\Scripts\activate.bat
+py -3 -c "import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)" >nul 2>&1
+if not errorlevel 1 (
+    set "PYCMD=py -3"
+    goto :PYTHON_FOUND
 )
 
-REM 2. Run cleaner within the virtual environment
-python run.py
+py -c "import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)" >nul 2>&1
+if not errorlevel 1 (
+    set "PYCMD=py"
+    goto :PYTHON_FOUND
+)
 
-if %errorlevel% neq 0 (
+echo [ERROR] Python 3.9+ was not found on your system!
+echo.
+echo Please install Python 3:
+echo   1. Download installer from: https://www.python.org/downloads/
+echo   2. Run installer and MAKE SURE to check the box:
+echo      [x] "Add python.exe to PATH"
+echo.
+pause
+exit /b 1
+
+:PYTHON_FOUND
+echo [+] Python detected: %PYCMD%
+
+REM 2. Create virtual environment if .venv does not exist
+if exist ".venv\Scripts\python.exe" goto :VENV_READY
+
+echo [*] Setting up isolated Python virtual environment (.venv)...
+%PYCMD% -m venv .venv
+if errorlevel 1 (
     echo.
-    echo [!] Server exited with an error.
+    echo [ERROR] Failed to create virtual environment with %PYCMD%.
+    echo Please ensure the Python 'venv' module is available.
+    echo.
     pause
+    exit /b 1
 )
+
+echo [+] Virtual environment created.
+echo [*] Installing required packages into .venv (one-time setup)...
+".venv\Scripts\python.exe" -m pip install --upgrade pip >nul 2>&1
+".venv\Scripts\python.exe" -m pip install -r backend\requirements.txt
+if errorlevel 1 (
+    echo.
+    echo [ERROR] Failed to install dependencies into .venv.
+    echo Check your internet connection and try again.
+    echo.
+    pause
+    exit /b 1
+)
+echo [+] All dependencies installed successfully!
+echo.
+
+:VENV_READY
+REM 3. Run the application using the virtual environment's python directly
+echo [*] Starting Bitwarden Duplicate Cleaner...
+".venv\Scripts\python.exe" run.py
+
+echo.
+echo =========================================================
+echo Application has stopped.
+echo =========================================================
+pause
