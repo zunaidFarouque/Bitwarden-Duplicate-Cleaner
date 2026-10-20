@@ -53,6 +53,10 @@
 
 You do **not** need Node.js, npm, or any complex build tools. The user interface comes pre-compiled and bundled directly with Python.
 
+> [!TIP]
+> **Isolated Virtual Environment (`.venv`)**:  
+> To keep your system clean and avoid dependency conflicts with other software, this project is designed to run in an isolated Python virtual environment (`.venv`). Both 1-click launchers automatically set this up for you.
+
 ### Prerequisites
 - **Python 3.9 or higher** ([Download from python.org](https://www.python.org/downloads/))
   - *Windows Users*: Make sure to check the box **"Add python.exe to PATH"** during Python setup!
@@ -70,11 +74,11 @@ You do **not** need Node.js, npm, or any complex build tools. The user interface
    - **On Windows:** Double-click [`start.bat`](start.bat).
    - **On macOS / Linux:** Double-click [`start.sh`](start.sh) (or run `./start.sh` in terminal).
 
-   *The launcher will automatically install any required Python packages on first launch and open `http://127.0.0.1:8765` directly in your browser!*
+   *The script automatically creates an isolated `.venv` virtual environment, installs the required packages into it, and opens `http://127.0.0.1:8765` directly in your browser!*
 
 ---
 
-### Method B: Command Line (For Developers & Git Users)
+### Method B: Command Line with Virtual Environment (Recommended for Developers)
 
 1. **Clone the repository:**
    ```bash
@@ -82,18 +86,21 @@ You do **not** need Node.js, npm, or any complex build tools. The user interface
    cd Bitwarden-Duplicate-Cleaner
    ```
 
-2. **(Optional) Create and activate a virtual environment:**
-   ```bash
-   # Windows
-   python -m venv venv
-   .\venv\Scripts\activate
+2. **Create and activate the virtual environment:**
 
-   # macOS / Linux
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
+   - **On Windows (PowerShell / CMD):**
+     ```powershell
+     python -m venv .venv
+     .\.venv\Scripts\activate
+     ```
 
-3. **Install dependencies:**
+   - **On macOS / Linux:**
+     ```bash
+     python3 -m venv .venv
+     source .venv/bin/activate
+     ```
+
+3. **Install dependencies inside the virtual environment:**
    ```bash
    pip install -r backend/requirements.txt
    ```

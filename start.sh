@@ -16,4 +16,19 @@ else
     exit 1
 fi
 
-$PYCMD run.py
+# 1. Create virtual environment if it does not exist
+if [ ! -f ".venv/bin/activate" ]; then
+    echo "[*] Creating isolated virtual environment in .venv..."
+    $PYCMD -m venv .venv
+    echo "[+] Virtual environment created."
+    echo "[*] Installing dependencies inside .venv..."
+    source .venv/bin/activate
+    python -m pip install --upgrade pip >/dev/null 2>&1 || true
+    python -m pip install -r backend/requirements.txt
+    echo "[+] Dependencies installed successfully."
+else
+    source .venv/bin/activate
+fi
+
+# 2. Run cleaner within the virtual environment
+python run.py

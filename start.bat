@@ -26,7 +26,32 @@ if %errorlevel% neq 0 (
     set PYCMD=python
 )
 
-%PYCMD% run.py
+REM 1. Create virtual environment if it does not exist
+if not exist ".venv\Scripts\activate.bat" (
+    echo [*] Creating isolated virtual environment in .venv...
+    %PYCMD% -m venv .venv
+    if %errorlevel% neq 0 (
+        echo [ERROR] Failed to create virtual environment.
+        pause
+        exit /b 1
+    )
+    echo [+] Virtual environment created.
+    echo [*] Installing dependencies inside .venv...
+    call .venv\Scripts\activate.bat
+    python -m pip install --upgrade pip >nul 2>&1
+    python -m pip install -r backend\requirements.txt
+    if %errorlevel% neq 0 (
+        echo [ERROR] Failed to install dependencies into .venv.
+        pause
+        exit /b 1
+    )
+    echo [+] Dependencies installed successfully.
+) else (
+    call .venv\Scripts\activate.bat
+)
+
+REM 2. Run cleaner within the virtual environment
+python run.py
 
 if %errorlevel% neq 0 (
     echo.
