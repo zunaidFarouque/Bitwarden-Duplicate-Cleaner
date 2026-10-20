@@ -7,7 +7,7 @@
 [![React](https://img.shields.io/badge/React-19-61DAFB.svg?logo=react&logoColor=black)](https://react.dev/)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind-v4-38B2AC.svg?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://img.shields.io/badge/Tests-59%20Passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-61%20Passed-brightgreen.svg)]()
 [![Air-Gapped](https://img.shields.io/badge/Privacy-100%25%20Air--Gapped-indigo.svg)]()
 
 **A 100% local, privacy-first, passkey-safe web application for deduplicating, diffing, and consolidating Bitwarden password vaults with absolute peace of mind.**
@@ -37,6 +37,12 @@
 - **🧹 Clean Dynamic Columns**:
   - Tables automatically hide empty columns if no duplicate row in that account possesses data for that field (e.g., if neither duplicate has TOTP, the TOTP column is omitted).
   - The **Unique Logins** page includes a **Three-Dots Menu (`⋮`)** allowing users to customize column visibility at any time.
+- **🛡️ 100% Non-Destructive Vault Preservation**:
+  - **Everything Not Consolidated is Retained**: If you do not explicitly merge or delete a duplicate table, **all duplicate entries are preserved intact** in your exported vault. The application never deletes or discards any entry without your command.
+  - **Cards, Notes, and Identities are 100% Retained**: Only Login items (`type 1`) undergo duplicate analysis. Credit/Debit Cards (`type 3`), Secure Notes (`type 2`), and Identities (`type 4`) are **strictly exempt** from deduplication and are never merged or altered. All card numbers, expiration dates, CVVs, note bodies, passport numbers, custom fields, and folders are preserved byte-for-byte upon export.
+- **🕒 Last Updated Timestamps & Latest Password Highlight**:
+  - Displays the exact date credentials were last modified in Bitwarden right next to the password.
+  - Distinct **`★ Latest`** highlight badge automatically flags the newest password row so you know which credential is the most current at a glance.
 - **🛡️ Survivor Consolidation & Password History**:
   - Pick your preferred master row.
   - Unions passkeys, appends non-empty URIs, merges notes, and automatically archives differing passwords to Bitwarden's `passwordHistory` so old credentials are never discarded.
@@ -133,6 +139,24 @@ This means Python was installed without adding it to your system PATH.
 </details>
 
 <details>
+<summary><strong>Q: What happens if I don't consolidate something? Will it delete anything?</strong></summary>
+
+**No, absolutely not.** Any duplicate account group you choose not to consolidate is **retained 100% untouched** in your exported vault. The tool only consolidates or moves entries to Trash when you explicitly click **"Consolidate into Survivor"** or **"Delete row"**.
+</details>
+
+<details>
+<summary><strong>Q: What happens to my Credit Cards, Secure Notes, and Identities?</strong></summary>
+
+**They are 100% preserved.** Only Login items (`type 1`) are analyzed for duplicates. Non-login items:
+- **Cards (`type 3`)**: Cardholder names, card numbers, expiration dates, CVV security codes.
+- **Secure Notes (`type 2`)**: All encrypted note bodies and structures.
+- **Identities (`type 4`)**: Full names, addresses, phone numbers, passport/SSN details.
+- **Custom Fields & Folders**: All custom fields, folder IDs, and folder names.
+
+All of these are strictly exempt from deduplication, treated as unique and safe, and exported completely intact.
+</details>
+
+<details>
 <summary><strong>Q: Can I run this with my Wi-Fi / Internet disconnected?</strong></summary>
 
 **Yes!** The application is 100% self-contained. It strictly binds to `127.0.0.1` (localhost). You can unplug your Ethernet cable or turn off Wi-Fi and the entire deduplication, diffing, and export workflow will function without interruption.
@@ -205,7 +229,7 @@ flowchart LR
 The project includes an exhaustive automated test suite covering unit tests, domain normalization permutations, username heuristics, passkey unions, state machine stress chains, and schema compliance:
 
 ```bash
-# Run all 59 automated tests
+# Run all 61 automated tests
 python -m unittest discover tests
 ```
 
@@ -243,7 +267,7 @@ Bitwarden-Duplicate-Cleaner/
 │   └── vite.config.ts
 ├── demo/
 │   └── sample_bitwarden_vault.json # Comprehensive 15-item sample vault
-├── tests/                      # 59 automated tests
+├── tests/                      # 61 automated tests
 │   ├── test_core.py
 │   ├── test_permutations_core.py
 │   ├── test_state_permutations.py
