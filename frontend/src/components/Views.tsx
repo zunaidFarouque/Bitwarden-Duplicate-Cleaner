@@ -93,11 +93,27 @@ export const UniqueView: React.FC<UniqueViewProps> = ({ items }) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Determine whether any row in the dataset has content for each column
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '—';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
   const hasColumnData = useMemo(() => {
     return {
       name: true,
       username: items.some((i) => !!i.username),
       password: items.some((i) => !!i.password),
+      updated: items.some((i) => !!i.revisionDate || !!i.creationDate),
       totp: items.some((i) => !!i.totp),
       passkeys: items.some((i) => i.passkeyCount > 0),
       notes: items.some((i) => !!i.notes),
@@ -185,6 +201,7 @@ export const UniqueView: React.FC<UniqueViewProps> = ({ items }) => {
                   { key: 'name', label: 'Name' },
                   { key: 'username', label: 'Username' },
                   { key: 'password', label: 'Password' },
+                  { key: 'updated', label: 'Last Updated' },
                   { key: 'totp', label: 'TOTP' },
                   { key: 'passkeys', label: 'Passkeys' },
                   { key: 'notes', label: 'Notes' },
@@ -218,6 +235,7 @@ export const UniqueView: React.FC<UniqueViewProps> = ({ items }) => {
                 {isColVisible('name') && <th className="py-2.5 px-4">Name</th>}
                 {isColVisible('username') && <th className="py-2.5 px-4">Username</th>}
                 {isColVisible('password') && <th className="py-2.5 px-4">Password</th>}
+                {isColVisible('updated') && <th className="py-2.5 px-4 whitespace-nowrap">Last Updated</th>}
                 {isColVisible('totp') && <th className="py-2.5 px-4">TOTP</th>}
                 {isColVisible('passkeys') && <th className="py-2.5 px-4">Passkeys</th>}
                 {isColVisible('notes') && <th className="py-2.5 px-4">Notes</th>}
@@ -269,6 +287,13 @@ export const UniqueView: React.FC<UniqueViewProps> = ({ items }) => {
                           </button>
                         )}
                       </div>
+                    </td>
+                  )}
+
+                  {/* Last Updated */}
+                  {isColVisible('updated') && (
+                    <td className="py-3 px-4 font-mono text-slate-400 text-[11px] whitespace-nowrap" title={item.revisionDate || item.creationDate || ''}>
+                      {formatDate(item.revisionDate || item.creationDate)}
                     </td>
                   )}
 

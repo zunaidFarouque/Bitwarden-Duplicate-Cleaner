@@ -37,10 +37,43 @@ export const AccountTable: React.FC<Props> = ({
   onSetItemDomain,
   onMoveItemsDomain,
 }) => {
-  // Default survivor is the first item or the one with passkeys/most fields
+  // Find the most recently updated item ID in this duplicate group
+  const latestItemId = useMemo(() => {
+    let latestTime = -1;
+    let latestId = '';
+    for (const it of account.items) {
+      const dateStr = it.revisionDate || it.creationDate;
+      if (dateStr) {
+        const t = new Date(dateStr).getTime();
+        if (!isNaN(t) && t > latestTime) {
+          latestTime = t;
+          latestId = it.id;
+        }
+      }
+    }
+    return latestId;
+  }, [account.items]);
+
+  // Default survivor is:
+  // 1) item with passkeys (never lose passkeys!)
+  // 2) otherwise the latest updated login (most up-to-date password!)
+  // 3) fallback to first item
   const [survivorId, setSurvivorId] = useState<string>(() => {
     const withPasskeys = account.items.find((it) => it.passkeyCount > 0);
-    return withPasskeys ? withPasskeys.id : account.items[0]?.id || '';
+    if (withPasskeys) return withPasskeys.id;
+    let latestTime = -1;
+    let bestId = account.items[0]?.id || '';
+    for (const it of account.items) {
+      const dateStr = it.revisionDate || it.creationDate;
+      if (dateStr) {
+        const t = new Date(dateStr).getTime();
+        if (!isNaN(t) && t > latestTime) {
+          latestTime = t;
+          bestId = it.id;
+        }
+      }
+    }
+    return bestId;
   });
 
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
@@ -66,6 +99,11 @@ export const AccountTable: React.FC<Props> = ({
       name: true, // Always show Name column
       username: account.items.some((i) => i.username && i.username.trim() !== ''),
       password: account.items.some((i) => i.password && i.password.trim() !== ''),
+      updated: account.items.some(
+        (i) =>
+          (i.revisionDate && i.revisionDate.trim() !== '') ||
+          (i.creationDate && i.creationDate.trim() !== '')
+      ),
       totp: account.items.some((i) => i.totp && i.totp.trim() !== ''),
       passkeys: account.items.some((i) => i.passkeyCount > 0),
       notes: account.items.some((i) => i.notes && i.notes.trim() !== ''),
@@ -73,6 +111,21 @@ export const AccountTable: React.FC<Props> = ({
       uris: account.items.some((i) => i.uris && i.uris.length > 0),
     };
   }, [account.items]);
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return '—';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+    } catch {
+      return dateStr;
+    }
+  };
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -323,6 +376,9 @@ export const AccountTable: React.FC<Props> = ({
               {hasColumn.password && (
                 <th className={`py-2.5 px-3 ${isDiff('password') ? 'text-amber-400' : ''}`}>Password</th>
               )}
+              {hasColumn.updated && (
+                <th className="py-2.5 px-3 whitespace-nowrap">Last Updated</th>
+              )}
               {hasColumn.totp && (
                 <th className={`py-2.5 px-3 ${isDiff('totp') ? 'text-amber-400' : ''}`}>TOTP</th>
               )}
@@ -344,6 +400,8 @@ export const AccountTable: React.FC<Props> = ({
               const isSurvivor = survivorId === item.id;
               const isEditing = editingRowId === item.id;
               const isSelected = selectedIds.includes(item.id);
+              const isLatest = item.id === latestItemId && account.items.length > 1;
+              const itemDateStr = item.revisionDate || item.creationDate;
 
               return (
                 <tr
@@ -374,7 +432,11 @@ export const AccountTable: React.FC<Props> = ({
                       checked={isSurvivor}
                       onChange={() => setSurvivorId(item.id)}
                       className="w-4 h-4 text-indigo-600 bg-slate-800 border-slate-600 focus:ring-indigo-500 cursor-pointer"
-                      title="Set as survivor for merge"
+                      title={
+                        isLatest
+                          ? 'Set as survivor (Recommended: Latest update)'
+                          : 'Set as survivor for merge'
+                      }
                     />
                   </td>
 
@@ -445,7 +507,7 @@ export const AccountTable: React.FC<Props> = ({
                     </td>
                   )}
 
-                  {/* Password Cell (Plain Text by default, hover tooltip for full text) */}
+                  {/* Password Cell (Plain Text by default, hover tooltip for full text + update timestamp) */}
                   {hasColumn.password && (
                     <td className="py-3 px-3 text-slate-300 font-mono text-[11px] group/cell">
                       {isEditing ? (
@@ -460,8 +522,18 @@ export const AccountTable: React.FC<Props> = ({
                       ) : (
                         <div className="flex items-center justify-between gap-1">
                           <span
-                            className="truncate max-w-[130px] font-mono text-slate-200 select-all cursor-text"
-                            title={item.password || 'No password'}
+                            className={`truncate max-w-[130px] font-mono select-all cursor-text ${
+                              isLatest && isDiff('password')
+                                ? 'text-emerald-300 font-semibold'
+                                : 'text-slate-200'
+                            }`}
+                            title={`${item.password || 'No password'}${
+                              itemDateStr
+                                ? ` • Updated: ${formatDate(itemDateStr)}${
+                                    isLatest ? ' (Latest)' : ''
+                                  }`
+                                : ''
+                            }`}
                           >
                             {item.password || '—'}
                           </span>
@@ -489,6 +561,32 @@ export const AccountTable: React.FC<Props> = ({
                           </div>
                         </div>
                       )}
+                    </td>
+                  )}
+
+                  {/* Last Updated Cell with Highlight for Latest */}
+                  {hasColumn.updated && (
+                    <td className="py-3 px-3 text-[11px] whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          title={itemDateStr ? `Last updated: ${itemDateStr}` : 'No date recorded'}
+                          className={`font-mono transition ${
+                            isLatest
+                              ? 'text-emerald-300 font-bold'
+                              : 'text-slate-400'
+                          }`}
+                        >
+                          {formatDate(itemDateStr)}
+                        </span>
+                        {isLatest && (
+                          <span
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-emerald-500/25 text-emerald-300 border border-emerald-500/50 shadow-sm shadow-emerald-500/20 tracking-wide uppercase"
+                            title="★ Most recently updated credentials in this duplicate set"
+                          >
+                            ★ Latest
+                          </span>
+                        )}
+                      </div>
                     </td>
                   )}
 
@@ -533,7 +631,7 @@ export const AccountTable: React.FC<Props> = ({
                         <div className="flex flex-col gap-1">
                           <span
                             className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 w-fit"
-                            title={item.passkeyDetails?.map((p) => `RP ID: ${p.rpId || 'N/A'}, UserHandle: ${p.userHandle || 'N/A'}`).join('\n')}
+                            title={item.passkeyDetails?.map((p) => `RP ID: ${p.rpId || 'N/A'}, UserHandle: ${p.userName || p.userHandle || 'N/A'}`).join('\n')}
                           >
                             <KeyRound className="w-3 h-3" />
                             {item.passkeyCount} Passkey{item.passkeyCount > 1 ? 's' : ''}
