@@ -49,13 +49,32 @@
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start & Installation
+
+You do **not** need Node.js, npm, or any complex build tools. The user interface comes pre-compiled and bundled directly with Python.
 
 ### Prerequisites
-- **Python 3.9+**
-- Modern Web Browser (Chrome, Edge, Firefox, Brave, Safari)
+- **Python 3.9 or higher** ([Download from python.org](https://www.python.org/downloads/))
+  - *Windows Users*: Make sure to check the box **"Add python.exe to PATH"** during Python setup!
+- Any modern web browser (Chrome, Edge, Firefox, Brave, Safari)
 
-### Installation & Launch
+---
+
+### Method A: 1-Click Launch (Easiest — No Terminal Needed)
+
+1. **Download the repository:**
+   - Click the green **`<> Code`** button at the top of this GitHub page and select **[Download ZIP](https://github.com/zunaidFarouque/Bitwarden-Duplicate-Cleaner/archive/refs/heads/main.zip)**.
+   - Extract the downloaded `.zip` folder anywhere on your computer.
+
+2. **Run the 1-Click Launcher:**
+   - **On Windows:** Double-click [`start.bat`](start.bat).
+   - **On macOS / Linux:** Double-click [`start.sh`](start.sh) (or run `./start.sh` in terminal).
+
+   *The launcher will automatically install any required Python packages on first launch and open `http://127.0.0.1:8765` directly in your browser!*
+
+---
+
+### Method B: Command Line (For Developers & Git Users)
 
 1. **Clone the repository:**
    ```bash
@@ -63,25 +82,54 @@
    cd Bitwarden-Duplicate-Cleaner
    ```
 
-2. **Install Python dependencies:**
+2. **(Optional) Create and activate a virtual environment:**
+   ```bash
+   # Windows
+   python -m venv venv
+   .\venv\Scripts\activate
+
+   # macOS / Linux
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+3. **Install dependencies:**
    ```bash
    pip install -r backend/requirements.txt
    ```
 
-3. **Launch the application:**
+4. **Start the application:**
+   ```bash
+   python run.py
+   ```
 
-   - **Windows:** Double-click `start.bat` or run:
-     ```powershell
-     python run.py
-     ```
+   Your default web browser will automatically open to `http://127.0.0.1:8765`.
 
-   - **macOS / Linux:**
-     ```bash
-     chmod +x start.sh
-     ./start.sh
-     ```
+---
 
-The local server will start on `http://127.0.0.1:8765` and automatically open your default browser.
+### ❓ Frequently Asked Questions & Troubleshooting
+
+<details>
+<summary><strong>Q: Windows says "'python' is not recognized as an internal or external command"</strong></summary>
+
+This means Python was installed without adding it to your system PATH.
+1. Download Python from [python.org/downloads](https://www.python.org/downloads/).
+2. Run the installer and click **Modify** (or uninstall and reinstall).
+3. On the first installation screen, **check the box: `[x] Add python.exe to PATH`**.
+4. Re-run `start.bat`.
+</details>
+
+<details>
+<summary><strong>Q: Do I need Node.js or npm to use this?</strong></summary>
+
+**No.** The production frontend bundle is already compiled and included in `backend/app/static/`. Node.js is only required if you wish to modify the React/Tailwind source code in the `frontend/` directory.
+</details>
+
+<details>
+<summary><strong>Q: Can I run this with my Wi-Fi / Internet disconnected?</strong></summary>
+
+**Yes!** The application is 100% self-contained. It strictly binds to `127.0.0.1` (localhost). You can unplug your Ethernet cable or turn off Wi-Fi and the entire deduplication, diffing, and export workflow will function without interruption.
+</details>
 
 ---
 

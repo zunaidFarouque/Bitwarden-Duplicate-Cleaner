@@ -1,12 +1,43 @@
+import os
 import sys
 import time
+import subprocess
 import webbrowser
 import threading
-import uvicorn
 
 HOST = "127.0.0.1"
 PORT = 8765
 URL = f"http://{HOST}:{PORT}"
+
+
+def ensure_dependencies():
+    """Checks if dependencies are installed; installs them automatically if missing."""
+    packages = [
+        ("fastapi", "fastapi"),
+        ("uvicorn", "uvicorn"),
+        ("pydantic", "pydantic"),
+        ("multipart", "python-multipart"),
+    ]
+    needs_install = False
+    for mod, _ in packages:
+        try:
+            __import__(mod)
+        except ImportError:
+            needs_install = True
+            break
+
+    if needs_install:
+        print("=" * 65)
+        print("  [*] First-time setup: Installing required dependencies...")
+        print("=" * 65)
+        req_path = os.path.join(os.path.dirname(__file__), "backend", "requirements.txt")
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", req_path])
+            print("\n[+] Dependencies successfully installed!\n")
+        except Exception as e:
+            print(f"\n[!] Automatic dependency installation failed: {e}")
+            print("    Please run manually: pip install -r backend/requirements.txt")
+            sys.exit(1)
 
 
 def open_browser():
@@ -19,6 +50,10 @@ def open_browser():
 
 
 def main():
+    ensure_dependencies()
+
+    import uvicorn
+
     print("=" * 65)
     print("      Bitwarden Duplicate Cleaner - Privacy First & Local")
     print("=" * 65)
